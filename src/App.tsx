@@ -161,7 +161,7 @@ function App() {
         isOpen={isAnswerToastOpen}
         variant="info"
       />
-      <div className="flex w-80 mx-auto items-center mb-4">
+      <div className="flex w-full max-w-[26rem] mx-auto items-center mb-4">
         <Logo />
         <button
           type="button"
