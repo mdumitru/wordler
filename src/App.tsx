@@ -87,10 +87,10 @@ function App() {
   };
 
   return (
-    <div className="py-8 max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <div className="min-h-screen flex flex-col py-8 max-w-7xl mx-auto sm:px-6 lg:px-8">
       <Alert message="Not enough letters" isOpen={isNotEnoughLetters} />
       <Alert message="Word not found" isOpen={isWordNotFoundAlertOpen} />
-      <div className="flex w-80 mx-auto items-center mb-8">
+      <div className="flex w-80 mx-auto items-center mb-10">
         <h1 className="text-xl grow font-bold">Not Wordle</h1>
         <button
           type="button"
@@ -118,13 +118,16 @@ function App() {
         </p>
       )}
       <Grid guesses={guesses} currentGuess={currentGuess} solution={solution} />
-      <Keyboard
-        onChar={onChar}
-        onDelete={onDelete}
-        onEnter={onEnter}
-        guesses={guesses}
-        solution={solution}
-      />
+      {/* mt-auto pins the keyboard toward the bottom; pt-10 keeps a gap when the page is short. */}
+      <div className="mt-auto pt-10">
+        <Keyboard
+          onChar={onChar}
+          onDelete={onDelete}
+          onEnter={onEnter}
+          guesses={guesses}
+          solution={solution}
+        />
+      </div>
       <WinModal
         isOpen={isWinModalOpen}
         handleClose={() => setIsWinModalOpen(false)}
