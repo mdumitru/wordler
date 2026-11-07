@@ -16,13 +16,15 @@ export const Grid = ({ guesses, currentGuess }: Props) => {
 
   return (
     <div className="pb-6 overflow-x-auto">
-      {guesses.map((guess, i) => (
-        <CompletedRow key={i} guess={guess} />
-      ))}
-      {guesses.length < MAX_CHALLENGES && <CurrentRow guess={currentGuess} />}
-      {empties.map((_, i) => (
-        <EmptyRow key={i} />
-      ))}
+      <div className="w-max mx-auto">
+        {guesses.map((guess, i) => (
+          <CompletedRow key={i} guess={guess} />
+        ))}
+        {guesses.length < MAX_CHALLENGES && <CurrentRow guess={currentGuess} />}
+        {empties.map((_, i) => (
+          <EmptyRow key={i} />
+        ))}
+      </div>
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import { MAX_WORD_LENGTH } from "../../constants/settings";
+import { MIN_ROW_CELLS } from "../../constants/settings";
 import { Cell } from "./Cell";
 
 type Props = {
@@ -7,10 +7,12 @@ type Props = {
 
 export const CurrentRow = ({ guess }: Props) => {
   const splitGuess = guess.split("");
-  const emptyCells = Array.from(Array(MAX_WORD_LENGTH - splitGuess.length));
+  const emptyCells = Array.from(
+    Array(Math.max(0, MIN_ROW_CELLS - splitGuess.length))
+  );
 
   return (
-    <div className="flex justify-center mb-1">
+    <div className="flex mb-1">
       {splitGuess.map((letter, i) => (
         <Cell key={i} value={letter} />
       ))}
