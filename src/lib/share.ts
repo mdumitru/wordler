@@ -24,7 +24,7 @@ export const getShareText = (
       .join(""),
   );
   const letters = countLetters(guesses);
-  const header = `Not Wordle ${score}/${maxGuesses} · ${letters} ${
+  const header = `Wordler ${score}/${maxGuesses} · ${letters} ${
     letters === 1 ? "letter" : "letters"
   }`;
   return [header, "", ...rows].join("\n");
