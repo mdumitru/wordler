@@ -12,7 +12,7 @@ type Props = {
 export const Cell = ({ value, status, revealDelayMs }: Props) => {
   const isRevealing = revealDelayMs !== undefined;
   const classes = classnames(
-    "w-10 h-10 shrink-0 border-solid border-2 flex items-center justify-center mx-0.5 text-lg font-bold rounded",
+    "w-11 h-11 shrink-0 border-solid border-2 flex items-center justify-center mx-0.5 text-lg font-bold rounded",
     {
       "bg-white border-slate-200": !status,
       "bg-slate-400 text-white border-slate-400": status === "absent",
