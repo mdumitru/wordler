@@ -1,5 +1,5 @@
 import { InformationCircleIcon } from "@heroicons/react/outline";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Alert } from "./components/alerts/Alert";
 import { Grid } from "./components/grid/Grid";
 import { Keyboard } from "./components/keyboard/Keyboard";
@@ -13,6 +13,11 @@ import {
   getMaxGuesses,
 } from "./lib/words";
 import { getShareText } from "./lib/share";
+import {
+  getRowBounceMs,
+  getRowRevealMs,
+  prefersReducedMotion,
+} from "./lib/reveal";
 
 function App() {
   const [solution, setSolution] = useState(getWordOfDay);
@@ -26,9 +31,24 @@ function App() {
   const [isNotEnoughLetters, setIsNotEnoughLetters] = useState(false);
 
   const [shareLabel, setShareLabel] = useState("Share");
+  const [isShareVisible, setIsShareVisible] = useState(false);
+  // How long the board's end-of-game animations run; Share waits for them.
+  const [endAnimationMs, setEndAnimationMs] = useState(0);
 
   const maxGuesses = getMaxGuesses(solution);
   const isGameOver = isGameWon || isAnswerRevealed;
+
+  useEffect(() => {
+    if (!isGameOver) {
+      setIsShareVisible(false);
+      return;
+    }
+    const timer = setTimeout(
+      () => setIsShareVisible(true),
+      prefersReducedMotion() ? 0 : endAnimationMs,
+    );
+    return () => clearTimeout(timer);
+  }, [isGameOver, endAnimationMs]);
 
   const onChar = (value: string) => {
     if (!isAnswerRevealed && currentGuess.length < MAX_WORD_LENGTH) {
@@ -65,10 +85,17 @@ function App() {
       setCurrentGuess("");
 
       if (winningWord) {
+        setEndAnimationMs(
+          getRowRevealMs(currentGuess.length) +
+            getRowBounceMs(currentGuess.length),
+        );
         setGuesses([...guesses, currentGuess]);
         setIsGameWon(true);
       } else if (guesses.length + 1 >= maxGuesses) {
         // Out of guesses: reveal the answer the same way giving up does.
+        setEndAnimationMs(
+          getRowRevealMs(currentGuess.length) + getRowRevealMs(solution.length),
+        );
         setGuesses([...guesses, currentGuess, solution]);
         setIsAnswerRevealed(true);
       } else {
@@ -90,6 +117,7 @@ function App() {
   const onGiveUp = (e: React.MouseEvent<HTMLButtonElement>) => {
     // Drop focus so a later physical Enter key does not click this button again.
     e.currentTarget.blur();
+    setEndAnimationMs(getRowRevealMs(solution.length));
     setIsAnswerRevealed(true);
     // Reveal the answer as a final, fully-correct row on the board.
     setGuesses([...guesses, solution]);
@@ -145,7 +173,7 @@ function App() {
         maxGuesses={maxGuesses}
         isGameWon={isGameWon}
       />
-      {isGameOver && (
+      {isShareVisible && (
         <button
           type="button"
           className="mx-auto px-4 py-2 text-sm font-medium rounded text-white bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"

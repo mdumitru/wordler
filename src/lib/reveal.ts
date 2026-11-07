@@ -25,3 +25,10 @@ export const getBounceStaggerMs = (length: number) =>
 // Time from a row appearing until its last tile has finished flipping.
 export const getRowRevealMs = (length: number) =>
   Math.max(0, length - 1) * getRevealStaggerMs(length) + FLIP_MS;
+
+// Time from the winning row's reveal ending until its last tile stops bouncing.
+export const getRowBounceMs = (length: number) =>
+  Math.max(0, length - 1) * getBounceStaggerMs(length) + BOUNCE_MS;
+
+export const prefersReducedMotion = () =>
+  window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
