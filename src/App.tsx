@@ -26,6 +26,7 @@ import {
 } from "./lib/reveal";
 
 const ANSWER_TOAST_MS = 5000;
+const WIN_TOAST_MS = 2000;
 
 function App() {
   const [solution, setSolution] = useState(getWordOfDay);
@@ -44,10 +45,34 @@ function App() {
   const [isEndAnimationDone, setIsEndAnimationDone] = useState(false);
   const [endAnimationMs, setEndAnimationMs] = useState(0);
   const [isAnswerToastOpen, setIsAnswerToastOpen] = useState(false);
+  const [isWinToastOpen, setIsWinToastOpen] = useState(false);
 
   const maxGuesses = getMaxGuesses(solution);
   const isGameOver = isGameWon || isAnswerRevealed;
   const lettersUsed = countLetters(guesses);
+
+  // Cheer as the winning row finishes flipping, while its tiles bounce.
+  useEffect(() => {
+    if (!isGameWon) {
+      setIsWinToastOpen(false);
+      return;
+    }
+    const winningGuess = guesses[guesses.length - 1];
+    const revealMs = prefersReducedMotion()
+      ? 0
+      : getRowRevealMs(winningGuess.length);
+    const openTimer = setTimeout(() => setIsWinToastOpen(true), revealMs);
+    const closeTimer = setTimeout(
+      () => setIsWinToastOpen(false),
+      revealMs + WIN_TOAST_MS,
+    );
+    return () => {
+      clearTimeout(openTimer);
+      clearTimeout(closeTimer);
+    };
+    // Only (re)schedule when the game is won, not on later guess changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isGameWon]);
 
   // Guesses whose tile reveal has finished; the keyboard only colours these.
   const [revealedCount, setRevealedCount] = useState(0);
@@ -192,6 +217,7 @@ function App() {
         isOpen={isAnswerToastOpen}
         variant="info"
       />
+      <Alert message="Great!" isOpen={isWinToastOpen} variant="info" />
       <div className="flex w-full max-w-[28rem] mx-auto items-center mb-4">
         <Logo />
         <button
