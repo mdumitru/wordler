@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Alert } from "./components/alerts/Alert";
 import { Grid } from "./components/grid/Grid";
 import { Keyboard } from "./components/keyboard/Keyboard";
+import { Logo } from "./components/logo/Logo";
 import { AboutModal } from "./components/modals/AboutModal";
 import { InfoModal } from "./components/modals/InfoModal";
 import { MAX_WORD_LENGTH } from "./constants/settings";
@@ -160,8 +161,8 @@ function App() {
         isOpen={isAnswerToastOpen}
         variant="info"
       />
-      <div className="flex w-80 mx-auto items-center mb-4">
-        <h1 className="text-xl grow font-bold">Wordler</h1>
+      <Logo />
+      <div className="flex w-80 mx-auto items-center justify-center mt-4 mb-4">
         <button
           type="button"
           className="mr-3 px-2.5 py-1.5 text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"

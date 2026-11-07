@@ -55,6 +55,21 @@
   }
 }
 
+/* Logo tiles flip like guesses, but start grey ("absent") rather than blank. */
+.logo-reveal {
+  animation-name: cell-reveal-flip, logo-reveal-hide;
+  animation-timing-function: ease-in-out, linear;
+  animation-fill-mode: backwards, backwards;
+}
+
+@keyframes logo-reveal-hide {
+  from,
+  to {
+    background-color: #94a3b8; /* slate-400 */
+    border-color: #94a3b8;
+  }
+}
+
 /* Winning row: each tile hops and settles after the reveal finishes. */
 .cell-bounce {
   animation-name: cell-bounce;
@@ -84,6 +99,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .cell-reveal,
+  .logo-reveal,
   .cell-bounce {
     animation: none;
   }
