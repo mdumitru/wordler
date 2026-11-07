@@ -9,6 +9,19 @@ export const getRevealStaggerMs = (length: number) =>
     ? 0
     : Math.min(MAX_STAGGER_MS, MAX_TOTAL_STAGGER_MS / (length - 1));
 
+// Winning-row celebration: tiles hop one after another once the reveal ends.
+export const BOUNCE_MS = 1000;
+const MAX_BOUNCE_STAGGER_MS = 100;
+const MAX_TOTAL_BOUNCE_STAGGER_MS = 500;
+
+export const getBounceStaggerMs = (length: number) =>
+  length <= 1
+    ? 0
+    : Math.min(
+        MAX_BOUNCE_STAGGER_MS,
+        MAX_TOTAL_BOUNCE_STAGGER_MS / (length - 1),
+      );
+
 // Time from a row appearing until its last tile has finished flipping.
 export const getRowRevealMs = (length: number) =>
   Math.max(0, length - 1) * getRevealStaggerMs(length) + FLIP_MS;

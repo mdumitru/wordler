@@ -10,16 +10,20 @@ type Props = {
   currentGuess: string;
   solution: string;
   maxGuesses: number;
+  isGameWon: boolean;
 };
 
 // One row is a 2.5rem cell plus a 0.25rem bottom margin.
 const ROW_HEIGHT_REM = 2.75;
+// Matches the scroll container's pt-6.
+const BOUNCE_ROOM_REM = 1.5;
 
 export const Grid = ({
   guesses,
   currentGuess,
   solution,
   maxGuesses,
+  isGameWon,
 }: Props) => {
   const hasGuessesLeft = guesses.length < maxGuesses;
   const empties = Array.from(
@@ -57,8 +61,11 @@ export const Grid = ({
     <div className="pb-6">
       <div
         ref={scrollRef}
-        className="board-scroll relative overflow-auto"
-        style={{ maxHeight: `${VISIBLE_ROWS * ROW_HEIGHT_REM}rem` }}
+        // Top padding leaves room for winning tiles to bounce without clipping.
+        className="board-scroll relative overflow-auto pt-6"
+        style={{
+          maxHeight: `${VISIBLE_ROWS * ROW_HEIGHT_REM + BOUNCE_ROOM_REM}rem`,
+        }}
       >
         <div ref={rowsRef} className="w-max mx-auto">
           {guesses.map((guess, i) => (
@@ -67,6 +74,7 @@ export const Grid = ({
               guess={guess}
               solution={solution}
               revealDelayMs={i >= firstNewRow ? revealDelays[i] : undefined}
+              isWinningRow={isGameWon && i === guesses.length - 1}
             />
           ))}
           {hasGuessesLeft && <CurrentRow guess={currentGuess} />}

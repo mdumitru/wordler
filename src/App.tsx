@@ -1,13 +1,11 @@
 import { InformationCircleIcon } from "@heroicons/react/outline";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Alert } from "./components/alerts/Alert";
 import { Grid } from "./components/grid/Grid";
 import { Keyboard } from "./components/keyboard/Keyboard";
 import { AboutModal } from "./components/modals/AboutModal";
 import { InfoModal } from "./components/modals/InfoModal";
-import { WinModal } from "./components/modals/WinModal";
 import { MAX_WORD_LENGTH } from "./constants/settings";
-import { getRowRevealMs } from "./lib/reveal";
 import {
   isWordInWordList,
   getWordOfDay,
@@ -21,25 +19,12 @@ function App() {
   const [currentGuess, setCurrentGuess] = useState("");
   const [isGameWon, setIsGameWon] = useState(false);
   const [isAnswerRevealed, setIsAnswerRevealed] = useState(false);
-  const [isWinModalOpen, setIsWinModalOpen] = useState(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
   const [isWordNotFoundAlertOpen, setIsWordNotFoundAlertOpen] = useState(false);
   const [isNotEnoughLetters, setIsNotEnoughLetters] = useState(false);
 
   const maxGuesses = getMaxGuesses(solution);
-
-  useEffect(() => {
-    if (!isGameWon) {
-      return;
-    }
-    // Let the winning row finish flipping before the modal covers it.
-    const timer = setTimeout(
-      () => setIsWinModalOpen(true),
-      getRowRevealMs(solution.length),
-    );
-    return () => clearTimeout(timer);
-  }, [isGameWon, solution]);
 
   const onChar = (value: string) => {
     if (!isAnswerRevealed && currentGuess.length < MAX_WORD_LENGTH) {
@@ -96,7 +81,6 @@ function App() {
     setCurrentGuess("");
     setIsGameWon(false);
     setIsAnswerRevealed(false);
-    setIsWinModalOpen(false);
   };
 
   const onGiveUp = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -112,7 +96,7 @@ function App() {
     <div className="min-h-screen flex flex-col py-8 max-w-7xl mx-auto sm:px-6 lg:px-8">
       <Alert message="Not enough letters" isOpen={isNotEnoughLetters} />
       <Alert message="Word not found" isOpen={isWordNotFoundAlertOpen} />
-      <div className="flex w-80 mx-auto items-center mb-10">
+      <div className="flex w-80 mx-auto items-center mb-4">
         <h1 className="text-xl grow font-bold">Not Wordle</h1>
         <button
           type="button"
@@ -139,6 +123,7 @@ function App() {
         currentGuess={currentGuess}
         solution={solution}
         maxGuesses={maxGuesses}
+        isGameWon={isGameWon}
       />
       {/* mt-auto pins the keyboard toward the bottom; pt-10 keeps a gap when the page is short. */}
       <div className="mt-auto pt-10">
@@ -150,12 +135,6 @@ function App() {
           solution={solution}
         />
       </div>
-      <WinModal
-        isOpen={isWinModalOpen}
-        handleClose={() => setIsWinModalOpen(false)}
-        guesses={guesses}
-        solution={solution}
-      />
       <InfoModal
         isOpen={isInfoModalOpen}
         handleClose={() => setIsInfoModalOpen(false)}
