@@ -1,4 +1,8 @@
-import { InformationCircleIcon } from "@heroicons/react/outline";
+import {
+  InformationCircleIcon,
+  MoonIcon,
+  SunIcon,
+} from "@heroicons/react/outline";
 import { useEffect, useState } from "react";
 import { Alert } from "./components/alerts/Alert";
 import { Grid } from "./components/grid/Grid";
@@ -13,6 +17,7 @@ import {
   getRandomWord,
   getMaxGuesses,
 } from "./lib/words";
+import { getTheme, setTheme, Theme } from "./lib/theme";
 import { countLetters, getShareText } from "./lib/share";
 import {
   getRowBounceMs,
@@ -33,6 +38,7 @@ function App() {
   const [isWordNotFoundAlertOpen, setIsWordNotFoundAlertOpen] = useState(false);
   const [isNotEnoughLetters, setIsNotEnoughLetters] = useState(false);
 
+  const [theme, setThemeState] = useState<Theme>(getTheme);
   const [shareLabel, setShareLabel] = useState("Share");
   // Share and the answer toast wait until the board's final animations end.
   const [isEndAnimationDone, setIsEndAnimationDone] = useState(false);
@@ -138,6 +144,14 @@ function App() {
     setCurrentGuess("");
   };
 
+  const onToggleTheme = (e: React.MouseEvent<HTMLButtonElement>) => {
+    // Drop focus so a later physical Enter key does not click this button again.
+    e.currentTarget.blur();
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    setThemeState(next);
+  };
+
   const onShare = async (e: React.MouseEvent<HTMLButtonElement>) => {
     // Drop focus so a later physical Enter key does not click this button again.
     e.currentTarget.blur();
@@ -161,7 +175,7 @@ function App() {
         isOpen={isAnswerToastOpen}
         variant="info"
       />
-      <div className="flex w-full max-w-[26rem] mx-auto items-center mb-4">
+      <div className="flex w-full max-w-[28rem] mx-auto items-center mb-4">
         <Logo />
         <button
           type="button"
@@ -177,6 +191,20 @@ function App() {
           disabled={isGameWon || isAnswerRevealed}
         >
           Give up
+        </button>
+        <button
+          type="button"
+          className="mr-2"
+          onClick={onToggleTheme}
+          aria-label={
+            theme === "dark" ? "Switch to light mode" : "Switch to dark mode"
+          }
+        >
+          {theme === "dark" ? (
+            <SunIcon className="h-6 w-6" />
+          ) : (
+            <MoonIcon className="h-6 w-6" />
+          )}
         </button>
         <InformationCircleIcon
           className="h-6 w-6 cursor-pointer"
