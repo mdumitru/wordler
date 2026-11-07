@@ -49,6 +49,23 @@ function App() {
   const isGameOver = isGameWon || isAnswerRevealed;
   const lettersUsed = countLetters(guesses);
 
+  // Guesses whose tile reveal has finished; the keyboard only colours these.
+  const [revealedCount, setRevealedCount] = useState(0);
+
+  useEffect(() => {
+    if (guesses.length <= revealedCount) {
+      // A new word cleared the board: reset straight away.
+      setRevealedCount(guesses.length);
+      return;
+    }
+    const lastGuess = guesses[guesses.length - 1];
+    const timer = setTimeout(
+      () => setRevealedCount(guesses.length),
+      prefersReducedMotion() ? 0 : getRowRevealMs(lastGuess.length),
+    );
+    return () => clearTimeout(timer);
+  }, [guesses, revealedCount]);
+
   useEffect(() => {
     if (!isGameOver) {
       setIsEndAnimationDone(false);
@@ -236,7 +253,7 @@ function App() {
           onChar={onChar}
           onDelete={onDelete}
           onEnter={onEnter}
-          guesses={guesses}
+          guesses={guesses.slice(0, revealedCount)}
           solution={solution}
         />
       </div>
