@@ -14,6 +14,7 @@ function App() {
   const [guesses, setGuesses] = useState<string[]>([]);
   const [currentGuess, setCurrentGuess] = useState("");
   const [isGameWon, setIsGameWon] = useState(false);
+  const [hasGivenUp, setHasGivenUp] = useState(false);
   const [isWinModalOpen, setIsWinModalOpen] = useState(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
@@ -27,7 +28,7 @@ function App() {
   }, [isGameWon]);
 
   const onChar = (value: string) => {
-    if (currentGuess.length < MAX_WORD_LENGTH) {
+    if (!hasGivenUp && currentGuess.length < MAX_WORD_LENGTH) {
       setCurrentGuess(`${currentGuess}${value}`);
     }
   };
@@ -37,6 +38,10 @@ function App() {
   };
 
   const onEnter = () => {
+    if (hasGivenUp) {
+      return;
+    }
+
     if (currentGuess.length === 0) {
       setIsNotEnoughLetters(true);
       return setTimeout(() => {
@@ -70,7 +75,15 @@ function App() {
     setGuesses([]);
     setCurrentGuess("");
     setIsGameWon(false);
+    setHasGivenUp(false);
     setIsWinModalOpen(false);
+  };
+
+  const onGiveUp = (e: React.MouseEvent<HTMLButtonElement>) => {
+    // Drop focus so a later physical Enter key does not click this button again.
+    e.currentTarget.blur();
+    setHasGivenUp(true);
+    setCurrentGuess("");
   };
 
   return (
@@ -86,11 +99,24 @@ function App() {
         >
           New word
         </button>
+        <button
+          type="button"
+          className="mr-3 px-2.5 py-1.5 text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          onClick={onGiveUp}
+          disabled={isGameWon || hasGivenUp}
+        >
+          Give up
+        </button>
         <InformationCircleIcon
           className="h-6 w-6 cursor-pointer"
           onClick={() => setIsInfoModalOpen(true)}
         />
       </div>
+      {hasGivenUp && (
+        <p className="w-80 mx-auto -mt-4 mb-4 text-center text-sm text-gray-700">
+          The word was <span className="font-bold">{solution}</span>
+        </p>
+      )}
       <Grid guesses={guesses} currentGuess={currentGuess} solution={solution} />
       <Keyboard
         onChar={onChar}
