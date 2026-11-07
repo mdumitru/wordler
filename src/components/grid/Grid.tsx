@@ -1,5 +1,4 @@
 import { useEffect, useRef } from "react";
-import { VISIBLE_ROWS } from "../../constants/settings";
 import { getRowRevealMs } from "../../lib/reveal";
 import { CompletedRow } from "./CompletedRow";
 import { CurrentRow } from "./CurrentRow";
@@ -12,11 +11,6 @@ type Props = {
   maxGuesses: number;
   isGameWon: boolean;
 };
-
-// One row is a 2.5rem cell plus a 0.25rem bottom margin.
-const ROW_HEIGHT_REM = 2.75;
-// Matches the scroll container's pt-6.
-const BOUNCE_ROOM_REM = 1.5;
 
 export const Grid = ({
   guesses,
@@ -58,14 +52,13 @@ export const Grid = ({
   }, [guesses.length]);
 
   return (
-    <div className="pb-6">
+    // min-h-0 lets the board shrink to the space left above the keyboard,
+    // so it only scrolls once the rows no longer fit on screen.
+    <div className="flex flex-col min-h-0 pb-6">
       <div
         ref={scrollRef}
         // Top padding leaves room for winning tiles to bounce without clipping.
-        className="board-scroll relative overflow-auto pt-6"
-        style={{
-          maxHeight: `${VISIBLE_ROWS * ROW_HEIGHT_REM + BOUNCE_ROOM_REM}rem`,
-        }}
+        className="board-scroll relative min-h-0 overflow-auto pt-6"
       >
         <div ref={rowsRef} className="w-max mx-auto">
           {guesses.map((guess, i) => (

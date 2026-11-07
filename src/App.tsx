@@ -113,7 +113,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col py-8 max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <div className="h-screen flex flex-col py-8 max-w-7xl mx-auto sm:px-6 lg:px-8">
       <Alert message="Not enough letters" isOpen={isNotEnoughLetters} />
       <Alert message="Word not found" isOpen={isWordNotFoundAlertOpen} />
       <div className="flex w-80 mx-auto items-center mb-4">
