@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { KeyValue } from "../../lib/keyboard";
 import { getStatuses } from "../../lib/statuses";
 import { Key } from "./Key";
@@ -22,6 +23,28 @@ export const Keyboard = ({ onChar, onDelete, onEnter, guesses }: Props) => {
     }
     return onChar(value);
   };
+
+  useEffect(() => {
+    const listener = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) {
+        return;
+      }
+      if (e.code === "Enter") {
+        onEnter();
+      } else if (e.code === "Backspace") {
+        onDelete();
+      } else {
+        const key = e.key.toUpperCase();
+        if (key.length === 1 && key >= "A" && key <= "Z") {
+          onChar(key);
+        }
+      }
+    };
+    window.addEventListener("keyup", listener);
+    return () => {
+      window.removeEventListener("keyup", listener);
+    };
+  }, [onEnter, onDelete, onChar]);
 
   return (
     <div>
