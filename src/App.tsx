@@ -7,7 +7,12 @@ import { AboutModal } from "./components/modals/AboutModal";
 import { InfoModal } from "./components/modals/InfoModal";
 import { WinModal } from "./components/modals/WinModal";
 import { MAX_WORD_LENGTH } from "./constants/settings";
-import { isWordInWordList, getWordOfDay, getRandomWord } from "./lib/words";
+import {
+  isWordInWordList,
+  getWordOfDay,
+  getRandomWord,
+  getMaxGuesses,
+} from "./lib/words";
 
 function App() {
   const [solution, setSolution] = useState(getWordOfDay);
@@ -21,6 +26,9 @@ function App() {
   const [isWordNotFoundAlertOpen, setIsWordNotFoundAlertOpen] = useState(false);
   const [isNotEnoughLetters, setIsNotEnoughLetters] = useState(false);
 
+  const maxGuesses = getMaxGuesses(solution);
+  const isOutOfGuesses = !isGameWon && guesses.length >= maxGuesses;
+
   useEffect(() => {
     if (isGameWon) {
       setIsWinModalOpen(true);
@@ -28,7 +36,11 @@ function App() {
   }, [isGameWon]);
 
   const onChar = (value: string) => {
-    if (!hasGivenUp && currentGuess.length < MAX_WORD_LENGTH) {
+    if (
+      !hasGivenUp &&
+      !isOutOfGuesses &&
+      currentGuess.length < MAX_WORD_LENGTH
+    ) {
       setCurrentGuess(`${currentGuess}${value}`);
     }
   };
@@ -38,7 +50,7 @@ function App() {
   };
 
   const onEnter = () => {
-    if (hasGivenUp) {
+    if (hasGivenUp || isOutOfGuesses) {
       return;
     }
 
@@ -114,7 +126,12 @@ function App() {
           onClick={() => setIsInfoModalOpen(true)}
         />
       </div>
-      <Grid guesses={guesses} currentGuess={currentGuess} solution={solution} />
+      <Grid
+        guesses={guesses}
+        currentGuess={currentGuess}
+        solution={solution}
+        maxGuesses={maxGuesses}
+      />
       {/* mt-auto pins the keyboard toward the bottom; pt-10 keeps a gap when the page is short. */}
       <div className="mt-auto pt-10">
         <Keyboard

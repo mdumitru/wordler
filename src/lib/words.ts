@@ -1,5 +1,10 @@
 import { WORDS } from "../constants/wordlist";
 import { VALIDGUESSES } from "../constants/validGuesses";
+import { MAX_GUESSES_CAP } from "../constants/settings";
+
+// Short words get one guess more than their length; longer words are capped.
+export const getMaxGuesses = (solution: string) =>
+  Math.min(MAX_GUESSES_CAP, solution.length + 1);
 
 export const isWordInWordList = (word: string) => {
   return (
