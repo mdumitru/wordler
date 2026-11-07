@@ -161,18 +161,18 @@ function App() {
         isOpen={isAnswerToastOpen}
         variant="info"
       />
-      <Logo />
-      <div className="flex w-80 mx-auto items-center justify-center mt-4 mb-4">
+      <div className="flex w-80 mx-auto items-center mb-4">
+        <Logo />
         <button
           type="button"
-          className="mr-3 px-2.5 py-1.5 text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          className="mr-2 px-2.5 py-1.5 text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           onClick={onNewWord}
         >
           New word
         </button>
         <button
           type="button"
-          className="mr-3 px-2.5 py-1.5 text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="mr-2 px-2.5 py-1.5 text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={onGiveUp}
           disabled={isGameWon || isAnswerRevealed}
         >

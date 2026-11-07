@@ -18,7 +18,7 @@ export const Logo = () => {
   const bounceStaggerMs = getBounceStaggerMs(LETTERS.length);
 
   return (
-    <h1 className="flex justify-center" aria-label="Wordler">
+    <h1 className="flex grow" aria-label="Wordler">
       {LETTERS.map((letter, i) => {
         const revealDelayMs = START_MS + i * revealStaggerMs;
         return (
@@ -32,7 +32,7 @@ export const Logo = () => {
             }}
           >
             <div
-              className="logo-reveal w-8 h-8 mx-0.5 flex items-center justify-center rounded border-2 border-solid bg-green-500 border-green-500 text-white text-lg font-bold"
+              className="logo-reveal w-[18px] h-[18px] mr-px flex items-center justify-center rounded-sm bg-green-500 text-white text-xs font-bold"
               style={{
                 animationDuration: `${FLIP_MS}ms, ${FLIP_MS / 2}ms`,
                 animationDelay: `${revealDelayMs}ms, ${revealDelayMs}ms`,
