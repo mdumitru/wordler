@@ -83,6 +83,8 @@ function App() {
     // Drop focus so a later physical Enter key does not click this button again.
     e.currentTarget.blur();
     setHasGivenUp(true);
+    // Reveal the answer as a final, fully-correct row on the board.
+    setGuesses([...guesses, solution]);
     setCurrentGuess("");
   };
 
@@ -112,11 +114,6 @@ function App() {
           onClick={() => setIsInfoModalOpen(true)}
         />
       </div>
-      {hasGivenUp && (
-        <p className="w-80 mx-auto -mt-4 mb-4 text-center text-sm text-gray-700">
-          The word was <span className="font-bold">{solution}</span>
-        </p>
-      )}
       <Grid guesses={guesses} currentGuess={currentGuess} solution={solution} />
       {/* mt-auto pins the keyboard toward the bottom; pt-10 keeps a gap when the page is short. */}
       <div className="mt-auto pt-10">
