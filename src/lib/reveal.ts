@@ -1,8 +1,8 @@
 // Each tile flips for FLIP_MS; tiles start one after another, but long words
 // squeeze the stagger so a whole row never takes much longer than a short one.
-export const FLIP_MS = 500;
-const MAX_STAGGER_MS = 250;
-const MAX_TOTAL_STAGGER_MS = 1250;
+export const FLIP_MS = 650;
+const MAX_STAGGER_MS = 325;
+const MAX_TOTAL_STAGGER_MS = 1625;
 
 export const getRevealStaggerMs = (length: number) =>
   length <= 1
