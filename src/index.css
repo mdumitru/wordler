@@ -50,7 +50,7 @@
   from,
   to {
     background-color: #ffffff;
-    border-color: #e2e8f0; /* slate-200 */
+    border-color: #878a8c; /* wordle-filled */
     color: #000000;
   }
 }
@@ -65,7 +65,7 @@
 @keyframes logo-reveal-hide {
   from,
   to {
-    background-color: #94a3b8; /* slate-400 */
+    background-color: #787c7e; /* wordle-absent */
   }
 }
 

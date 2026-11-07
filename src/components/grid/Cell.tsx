@@ -14,10 +14,13 @@ export const Cell = ({ value, status, revealDelayMs }: Props) => {
   const classes = classnames(
     "w-16 h-16 shrink-0 border-solid border-2 flex items-center justify-center mx-0.5 text-3xl font-bold rounded",
     {
-      "bg-white border-slate-200": !status,
-      "bg-slate-400 text-white border-slate-400": status === "absent",
-      "bg-green-500 text-white border-green-500": status === "correct",
-      "bg-yellow-500 text-white border-yellow-500": status === "present",
+      "bg-white border-wordle-empty": !status && !value,
+      "bg-white border-wordle-filled": !status && value,
+      "bg-wordle-absent text-white border-wordle-absent": status === "absent",
+      "bg-wordle-correct text-white border-wordle-correct":
+        status === "correct",
+      "bg-wordle-present text-white border-wordle-present":
+        status === "present",
       "cell-reveal": isRevealing,
     },
   );

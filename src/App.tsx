@@ -196,7 +196,7 @@ function App() {
       {isEndAnimationDone && (
         <button
           type="button"
-          className="mx-auto px-4 py-2 text-sm font-medium rounded text-white bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+          className="mx-auto px-4 py-2 text-sm font-medium rounded text-white bg-wordle-correct hover:bg-wordle-correct-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wordle-correct"
           onClick={onShare}
         >
           {shareLabel}
