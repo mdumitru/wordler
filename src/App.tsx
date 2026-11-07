@@ -12,6 +12,7 @@ import {
   getRandomWord,
   getMaxGuesses,
 } from "./lib/words";
+import { getShareText } from "./lib/share";
 
 function App() {
   const [solution, setSolution] = useState(getWordOfDay);
@@ -24,7 +25,10 @@ function App() {
   const [isWordNotFoundAlertOpen, setIsWordNotFoundAlertOpen] = useState(false);
   const [isNotEnoughLetters, setIsNotEnoughLetters] = useState(false);
 
+  const [shareLabel, setShareLabel] = useState("Share");
+
   const maxGuesses = getMaxGuesses(solution);
+  const isGameOver = isGameWon || isAnswerRevealed;
 
   const onChar = (value: string) => {
     if (!isAnswerRevealed && currentGuess.length < MAX_WORD_LENGTH) {
@@ -92,6 +96,22 @@ function App() {
     setCurrentGuess("");
   };
 
+  const onShare = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    // Drop focus so a later physical Enter key does not click this button again.
+    e.currentTarget.blur();
+    // A revealed answer row is not one of the player's guesses.
+    const playerGuesses = isAnswerRevealed ? guesses.slice(0, -1) : guesses;
+    const text = getShareText(playerGuesses, solution, maxGuesses, isGameWon);
+    try {
+      await navigator.clipboard.writeText(text);
+      setShareLabel("Copied!");
+    } catch (err) {
+      console.error("Could not copy share text", err);
+      setShareLabel("Copy failed");
+    }
+    setTimeout(() => setShareLabel("Share"), 2000);
+  };
+
   return (
     <div className="min-h-screen flex flex-col py-8 max-w-7xl mx-auto sm:px-6 lg:px-8">
       <Alert message="Not enough letters" isOpen={isNotEnoughLetters} />
@@ -125,6 +145,15 @@ function App() {
         maxGuesses={maxGuesses}
         isGameWon={isGameWon}
       />
+      {isGameOver && (
+        <button
+          type="button"
+          className="mx-auto px-4 py-2 text-sm font-medium rounded text-white bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+          onClick={onShare}
+        >
+          {shareLabel}
+        </button>
+      )}
       {/* mt-auto pins the keyboard toward the bottom; pt-10 keeps a gap when the page is short. */}
       <div className="mt-auto pt-10">
         <Keyboard
