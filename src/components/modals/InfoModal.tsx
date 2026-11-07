@@ -1,6 +1,17 @@
 import { Fragment } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { Cell } from "../grid/Cell";
+import { MAX_WORD_LENGTH, MIN_GUESSES } from "../../constants/settings";
+import { WORDS } from "../../constants/wordlist";
+
+const SHORTEST = Math.min(...WORDS.map((word) => word.length));
+const LONGEST = Math.max(...WORDS.map((word) => word.length));
+
+const ordinal = (n: number) => {
+  const suffixes = ["th", "st", "nd", "rd"];
+  const v = n % 100;
+  return `${n}${suffixes[(v - 20) % 10] || suffixes[v] || suffixes[0]}`;
+};
 
 type Props = {
   isOpen: boolean;
@@ -46,53 +57,109 @@ export const InfoModal = ({ isOpen, handleClose }: Props) => {
           >
             <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-sm sm:w-full sm:p-6">
               <div>
-                <div className="text-center">
+                <div>
                   <Dialog.Title
                     as="h3"
-                    className="text-lg leading-6 font-medium text-gray-900"
+                    className="text-center text-lg leading-6 font-medium text-gray-900"
                   >
                     How to play
                   </Dialog.Title>
-                  <div className="mt-2">
-                    <p className="text-sm text-gray-500">
-                      Guess the word in 6 tries, or one more try than it has
-                      letters for longer words. After each guess, the color of
-                      the tiles will change to show how close your guess was to
-                      the word.
+                  <div className="mt-2 space-y-3 text-sm text-gray-500">
+                    <p>
+                      Guess the hidden word. Its length is a secret: it can be
+                      anywhere from {SHORTEST} to {LONGEST} letters, and your
+                      guesses can be any English word up to {MAX_WORD_LENGTH}{" "}
+                      letters long.
+                    </p>
+                    <p>
+                      You get {MIN_GUESSES} tries, or one more try than the word
+                      has letters if it is longer. If a new row appears after
+                      your {ordinal(MIN_GUESSES)} guess, the word has at least{" "}
+                      {MIN_GUESSES} letters.
                     </p>
 
-                    <div className="flex justify-center mb-1 mt-4">
-                      <Cell value="W" status="correct" />
-                      <Cell value="E" />
-                      <Cell value="A" />
-                      <Cell value="R" />
-                      <Cell value="Y" />
-                    </div>
-                    <p className="text-sm text-gray-500">
-                      The letter W is in the word and in the correct spot.
+                    <h4 className="pt-1 font-medium text-gray-900">
+                      Reading the colors
+                    </h4>
+                    <p>
+                      Each letter is checked against the letter in the same
+                      position of the word, counting from the left.
                     </p>
 
-                    <div className="flex justify-center mb-1 mt-4">
-                      <Cell value="P" />
-                      <Cell value="I" status="present" />
-                      <Cell value="L" />
-                      <Cell value="O" />
-                      <Cell value="T" />
+                    <div>
+                      <div className="flex justify-center mb-1">
+                        <Cell value="W" status="correct" />
+                        <Cell value="E" />
+                        <Cell value="A" />
+                        <Cell value="R" />
+                        <Cell value="Y" />
+                      </div>
+                      <p>
+                        <strong>W</strong> is in the word and in the correct
+                        spot.
+                      </p>
                     </div>
-                    <p className="text-sm text-gray-500">
-                      The letter L is in the word but in the wrong spot.
-                    </p>
 
-                    <div className="flex justify-center mb-1 mt-4">
-                      <Cell value="V" />
-                      <Cell value="A" />
-                      <Cell value="G" />
-                      <Cell value="U" status="absent" />
-                      <Cell value="E" />
+                    <div>
+                      <div className="flex justify-center mb-1">
+                        <Cell value="P" />
+                        <Cell value="I" status="present" />
+                        <Cell value="L" />
+                        <Cell value="O" />
+                        <Cell value="T" />
+                      </div>
+                      <p>
+                        <strong>I</strong> is in the word but in the wrong spot.
+                      </p>
                     </div>
-                    <p className="text-sm text-gray-500">
-                      The letter U is not in the word in any spot.
-                    </p>
+
+                    <div>
+                      <div className="flex justify-center mb-1">
+                        <Cell value="V" />
+                        <Cell value="A" />
+                        <Cell value="G" />
+                        <Cell value="U" status="absent" />
+                        <Cell value="E" />
+                      </div>
+                      <p>
+                        <strong>U</strong> is not in the word in any spot.
+                      </p>
+                    </div>
+
+                    <div>
+                      <div className="flex justify-center mb-1">
+                        <Cell value="C" status="correct" />
+                        <Cell value="A" status="correct" />
+                        <Cell value="T" status="correct" />
+                      </div>
+                      <p>
+                        All green, but not a win: the word could be{" "}
+                        <strong>CATALOG</strong>. Try a longer guess to find out
+                        how it continues.
+                      </p>
+                    </div>
+
+                    <h4 className="pt-1 font-medium text-gray-900">
+                      Scoring and buttons
+                    </h4>
+                    <ul className="list-disc pl-5 space-y-1">
+                      <li>
+                        <strong>Letters used</strong> adds up every letter you
+                        guess. Fewer tries is good; fewer letters is a bonus.
+                      </li>
+                      <li>
+                        <strong>New word</strong> starts over with a random
+                        word.
+                      </li>
+                      <li>
+                        <strong>Give up</strong> ends the game and shows the
+                        answer.
+                      </li>
+                      <li>
+                        <strong>Share</strong> appears when the game ends and
+                        copies a spoiler-free result to your clipboard.
+                      </li>
+                    </ul>
                   </div>
                 </div>
               </div>
