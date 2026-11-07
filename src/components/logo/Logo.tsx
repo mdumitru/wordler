@@ -32,7 +32,7 @@ export const Logo = () => {
             }}
           >
             <div
-              className="logo-reveal w-[30px] h-[30px] mr-px flex items-center justify-center rounded bg-wordle-correct text-white text-base font-bold"
+              className="logo-reveal w-[30px] h-[30px] mr-px flex items-center justify-center rounded bg-wordle-correct dark:bg-wordle-night-correct text-white text-base font-bold"
               style={{
                 animationDuration: `${FLIP_MS}ms, ${FLIP_MS / 2}ms`,
                 animationDelay: `${revealDelayMs}ms, ${revealDelayMs}ms`,

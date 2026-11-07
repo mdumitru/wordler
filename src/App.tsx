@@ -165,14 +165,14 @@ function App() {
         <Logo />
         <button
           type="button"
-          className="mr-2 px-2.5 py-1.5 text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          className="mr-2 px-2.5 py-1.5 text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 dark:text-indigo-100 dark:bg-indigo-900 dark:hover:bg-indigo-800 dark:focus:ring-offset-wordle-night-bg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           onClick={onNewWord}
         >
           New word
         </button>
         <button
           type="button"
-          className="mr-2 px-2.5 py-1.5 text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="mr-2 px-2.5 py-1.5 text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 dark:text-indigo-100 dark:bg-indigo-900 dark:hover:bg-indigo-800 dark:focus:ring-offset-wordle-night-bg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={onGiveUp}
           disabled={isGameWon || isAnswerRevealed}
         >
@@ -183,7 +183,7 @@ function App() {
           onClick={() => setIsInfoModalOpen(true)}
         />
       </div>
-      <p className="text-center text-sm text-gray-500">
+      <p className="text-center text-sm text-gray-500 dark:text-gray-400">
         Letters used: <span className="font-bold">{lettersUsed}</span>
       </p>
       <Grid
@@ -196,7 +196,7 @@ function App() {
       {isEndAnimationDone && (
         <button
           type="button"
-          className="mx-auto px-4 py-2 text-sm font-medium rounded text-white bg-wordle-correct hover:bg-wordle-correct-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wordle-correct"
+          className="mx-auto px-4 py-2 text-sm font-medium rounded text-white bg-wordle-correct hover:bg-wordle-night-correct dark:bg-wordle-night-correct dark:hover:bg-wordle-correct focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wordle-correct dark:focus:ring-offset-wordle-night-bg"
           onClick={onShare}
         >
           {shareLabel}
@@ -223,7 +223,7 @@ function App() {
 
       <button
         type="button"
-        className="mx-auto mt-8 flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+        className="mx-auto mt-8 flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 dark:text-indigo-100 dark:bg-indigo-900 dark:hover:bg-indigo-800 dark:focus:ring-offset-wordle-night-bg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
         onClick={() => setIsAboutModalOpen(true)}
       >
         About this game

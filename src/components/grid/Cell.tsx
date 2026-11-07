@@ -14,12 +14,15 @@ export const Cell = ({ value, status, revealDelayMs }: Props) => {
   const classes = classnames(
     "w-16 h-16 shrink-0 border-solid border-2 flex items-center justify-center mx-0.5 text-3xl font-bold rounded",
     {
-      "bg-white border-wordle-empty": !status && !value,
-      "bg-white border-wordle-filled": !status && value,
-      "bg-wordle-absent text-white border-wordle-absent": status === "absent",
-      "bg-wordle-correct text-white border-wordle-correct":
+      "bg-white dark:bg-wordle-night-bg border-wordle-empty dark:border-wordle-night-empty":
+        !status && !value,
+      "bg-white dark:bg-wordle-night-bg border-wordle-filled dark:border-wordle-night-filled":
+        !status && value,
+      "bg-wordle-absent dark:bg-wordle-night-absent text-white border-wordle-absent dark:border-wordle-night-absent":
+        status === "absent",
+      "bg-wordle-correct dark:bg-wordle-night-correct text-white border-wordle-correct dark:border-wordle-night-correct":
         status === "correct",
-      "bg-wordle-present text-white border-wordle-present":
+      "bg-wordle-present dark:bg-wordle-night-present text-white border-wordle-present dark:border-wordle-night-present":
         status === "present",
       "cell-reveal": isRevealing,
     },

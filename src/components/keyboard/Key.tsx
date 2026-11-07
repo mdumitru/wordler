@@ -21,10 +21,13 @@ export const Key = ({
   const classes = classnames(
     "flex items-center justify-center rounded mx-0.5 text-xs font-bold cursor-pointer hover:brightness-95 active:brightness-90",
     {
-      "bg-wordle-empty": !status,
-      "bg-wordle-absent text-white": status === "absent",
-      "bg-wordle-correct text-white": status === "correct",
-      "bg-wordle-present text-white": status === "present",
+      "bg-wordle-empty dark:bg-wordle-night-key dark:text-white": !status,
+      "bg-wordle-absent dark:bg-wordle-night-absent text-white":
+        status === "absent",
+      "bg-wordle-correct dark:bg-wordle-night-correct text-white":
+        status === "correct",
+      "bg-wordle-present dark:bg-wordle-night-present text-white":
+        status === "present",
     },
   );
 

@@ -55,16 +55,16 @@ export const InfoModal = ({ isOpen, handleClose }: Props) => {
             leaveFrom="opacity-100 translate-y-0 sm:scale-100"
             leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
           >
-            <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-sm sm:w-full sm:p-6">
+            <div className="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-sm sm:w-full sm:p-6">
               <div>
                 <div>
                   <Dialog.Title
                     as="h3"
-                    className="text-center text-lg leading-6 font-medium text-gray-900"
+                    className="text-center text-lg leading-6 font-medium text-gray-900 dark:text-white"
                   >
                     How to play
                   </Dialog.Title>
-                  <div className="mt-2 space-y-3 text-sm text-gray-500">
+                  <div className="mt-2 space-y-3 text-sm text-gray-500 dark:text-gray-300">
                     <p>
                       Guess the hidden word. Its length is a secret: it can be
                       anywhere from {SHORTEST} to {LONGEST} letters, and your
@@ -78,7 +78,7 @@ export const InfoModal = ({ isOpen, handleClose }: Props) => {
                       {MIN_GUESSES} letters.
                     </p>
 
-                    <h4 className="pt-1 font-medium text-gray-900">
+                    <h4 className="pt-1 font-medium text-gray-900 dark:text-white">
                       Reading the colors
                     </h4>
                     <p>
@@ -139,7 +139,7 @@ export const InfoModal = ({ isOpen, handleClose }: Props) => {
                       </p>
                     </div>
 
-                    <h4 className="pt-1 font-medium text-gray-900">
+                    <h4 className="pt-1 font-medium text-gray-900 dark:text-white">
                       Scoring and buttons
                     </h4>
                     <ul className="list-disc pl-5 space-y-1">

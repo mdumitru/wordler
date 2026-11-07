@@ -24,14 +24,16 @@ export const Alert = ({ isOpen, message, variant = "error" }: Props) => {
       <div
         className={classnames(
           "absolute z-20 top-2.5 left-1/2 transform -translate-x-1/2 max-w-sm w-full shadow-lg rounded-lg pointer-events-auto ring-1 ring-black ring-opacity-5 overflow-hidden",
-          variant === "info" ? "bg-gray-800" : "bg-rose-200",
+          variant === "info" ? "bg-gray-800 dark:bg-white" : "bg-rose-200",
         )}
       >
         <div className="p-4">
           <p
             className={classnames(
               "text-sm text-center font-medium",
-              variant === "info" ? "text-white" : "text-gray-900",
+              variant === "info"
+                ? "text-white dark:text-gray-900"
+                : "text-gray-900",
             )}
           >
             {message}

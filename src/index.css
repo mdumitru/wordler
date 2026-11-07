@@ -2,6 +2,33 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Colours the CSS animations below need; Tailwind classes cover the rest. */
+:root {
+  --page-bg: #ffffff;
+  --page-text: #000000;
+  --tile-filled-border: #878a8c; /* wordle-filled */
+  --logo-start-bg: #787c7e; /* wordle-absent */
+  --scroll-track: #f1f5f9; /* slate-100 */
+  --scroll-thumb: #94a3b8; /* slate-400 */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --page-bg: #121213; /* wordle-night-bg */
+    --page-text: #ffffff;
+    --tile-filled-border: #565758; /* wordle-night-filled */
+    --logo-start-bg: #3a3a3c; /* wordle-night-absent */
+    --scroll-track: #1f2937; /* gray-800 */
+    --scroll-thumb: #565758;
+  }
+}
+
+body {
+  background-color: var(--page-bg);
+  color: var(--page-text);
+}
+
 /* Custom-styled scrollbars bypass macOS overlay scrollbars, so they stay
    visible whenever the board overflows instead of only while scrolling. */
 .board-scroll::-webkit-scrollbar {
@@ -11,12 +38,12 @@
 }
 
 .board-scroll::-webkit-scrollbar-track {
-  background-color: #f1f5f9; /* slate-100 */
+  background-color: var(--scroll-track);
   border-radius: 4px;
 }
 
 .board-scroll::-webkit-scrollbar-thumb {
-  background-color: #94a3b8; /* slate-400 */
+  background-color: var(--scroll-thumb);
   border-radius: 4px;
 }
 
@@ -49,9 +76,9 @@
 @keyframes cell-reveal-hide {
   from,
   to {
-    background-color: #ffffff;
-    border-color: #878a8c; /* wordle-filled */
-    color: #000000;
+    background-color: var(--page-bg);
+    border-color: var(--tile-filled-border);
+    color: var(--page-text);
   }
 }
 
@@ -65,7 +92,7 @@
 @keyframes logo-reveal-hide {
   from,
   to {
-    background-color: #787c7e; /* wordle-absent */
+    background-color: var(--logo-start-bg);
   }
 }
 
