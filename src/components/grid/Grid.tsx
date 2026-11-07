@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { MIN_GUESSES } from "../../constants/settings";
 import { CompletedRow } from "./CompletedRow";
 import { CurrentRow } from "./CurrentRow";
 import { EmptyRow } from "./EmptyRow";
@@ -19,8 +20,10 @@ export const Grid = ({
   isGameWon,
 }: Props) => {
   const hasGuessesLeft = guesses.length < maxGuesses;
+  // The board always starts 6 rows tall; longer words with extra guesses
+  // grow it one row at a time as those guesses are used.
   const empties = Array.from(
-    Array(Math.max(0, maxGuesses - 1 - guesses.length)),
+    Array(Math.max(0, MIN_GUESSES - 1 - guesses.length)),
   );
   const scrollRef = useRef<HTMLDivElement>(null);
   // Only rows added since the last render play the reveal animation.
