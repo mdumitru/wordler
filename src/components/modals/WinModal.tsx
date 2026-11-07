@@ -7,9 +7,10 @@ type Props = {
   isOpen: boolean;
   handleClose: () => void;
   guesses: string[];
+  solution: string;
 };
 
-export const WinModal = ({ isOpen, handleClose, guesses }: Props) => {
+export const WinModal = ({ isOpen, handleClose, guesses, solution }: Props) => {
   return (
     <Transition.Root show={isOpen} as={Fragment}>
       <Dialog
@@ -62,7 +63,7 @@ export const WinModal = ({ isOpen, handleClose, guesses }: Props) => {
                     You won!
                   </Dialog.Title>
                   <div className="mt-2">
-                    <MiniGrid guesses={guesses} />
+                    <MiniGrid guesses={guesses} solution={solution} />
                     <p className="text-sm text-gray-500">Great job.</p>
                   </div>
                 </div>

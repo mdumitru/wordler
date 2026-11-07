@@ -7,9 +7,10 @@ import { AboutModal } from "./components/modals/AboutModal";
 import { InfoModal } from "./components/modals/InfoModal";
 import { WinModal } from "./components/modals/WinModal";
 import { MAX_WORD_LENGTH, MAX_CHALLENGES } from "./constants/settings";
-import { isWordInWordList, isWinningWord, solution } from "./lib/words";
+import { isWordInWordList, getWordOfDay, getRandomWord } from "./lib/words";
 
 function App() {
+  const [solution, setSolution] = useState(getWordOfDay);
   const [guesses, setGuesses] = useState<string[]>([]);
   const [currentGuess, setCurrentGuess] = useState("");
   const [isGameWon, setIsGameWon] = useState(false);
@@ -54,7 +55,7 @@ function App() {
       }, 2000);
     }
 
-    const winningWord = isWinningWord(currentGuess);
+    const winningWord = currentGuess === solution;
 
     if (guesses.length < MAX_CHALLENGES && !isGameWon) {
       setGuesses([...guesses, currentGuess]);
@@ -73,6 +74,17 @@ function App() {
     }
   };
 
+  const onNewWord = (e: React.MouseEvent<HTMLButtonElement>) => {
+    // Drop focus so a later physical Enter key does not click this button again.
+    e.currentTarget.blur();
+    setSolution(getRandomWord(solution));
+    setGuesses([]);
+    setCurrentGuess("");
+    setIsGameWon(false);
+    setIsGameLost(false);
+    setIsWinModalOpen(false);
+  };
+
   return (
     <div className="py-8 max-w-7xl mx-auto sm:px-6 lg:px-8">
       <Alert message="Not enough letters" isOpen={isNotEnoughLetters} />
@@ -83,22 +95,31 @@ function App() {
       />
       <div className="flex w-80 mx-auto items-center mb-8">
         <h1 className="text-xl grow font-bold">Not Wordle</h1>
+        <button
+          type="button"
+          className="mr-3 px-2.5 py-1.5 text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          onClick={onNewWord}
+        >
+          New word
+        </button>
         <InformationCircleIcon
           className="h-6 w-6 cursor-pointer"
           onClick={() => setIsInfoModalOpen(true)}
         />
       </div>
-      <Grid guesses={guesses} currentGuess={currentGuess} />
+      <Grid guesses={guesses} currentGuess={currentGuess} solution={solution} />
       <Keyboard
         onChar={onChar}
         onDelete={onDelete}
         onEnter={onEnter}
         guesses={guesses}
+        solution={solution}
       />
       <WinModal
         isOpen={isWinModalOpen}
         handleClose={() => setIsWinModalOpen(false)}
         guesses={guesses}
+        solution={solution}
       />
       <InfoModal
         isOpen={isInfoModalOpen}

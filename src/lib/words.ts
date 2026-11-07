@@ -8,10 +8,6 @@ export const isWordInWordList = (word: string) => {
   );
 };
 
-export const isWinningWord = (word: string) => {
-  return solution === word;
-};
-
 export const getWordOfDay = () => {
   // January 1, 2022 Game Epoch
   const epochMs = 1641013200000;
@@ -22,4 +18,13 @@ export const getWordOfDay = () => {
   return WORDS[index % WORDS.length].toUpperCase();
 };
 
-export const solution = getWordOfDay();
+export const getRandomWord = (exclude: string) => {
+  if (WORDS.length < 2) {
+    return WORDS[0].toUpperCase();
+  }
+  let word = exclude;
+  while (word === exclude) {
+    word = WORDS[Math.floor(Math.random() * WORDS.length)].toUpperCase();
+  }
+  return word;
+};

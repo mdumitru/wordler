@@ -1,5 +1,3 @@
-import { solution } from "./words";
-
 export type CharStatus = "absent" | "present" | "correct";
 
 export type CharValue =
@@ -31,7 +29,8 @@ export type CharValue =
   | "M";
 
 export const getStatuses = (
-  guesses: string[]
+  guesses: string[],
+  solution: string
 ): { [key: string]: CharStatus } => {
   const charObj: { [key: string]: CharStatus } = {};
 
@@ -57,7 +56,10 @@ export const getStatuses = (
   return charObj;
 };
 
-export const getGuessStatuses = (guess: string): CharStatus[] => {
+export const getGuessStatuses = (
+  guess: string,
+  solution: string
+): CharStatus[] => {
   const splitSolution = solution.split("");
   const splitGuess = guess.split("");
 
