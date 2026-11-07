@@ -212,12 +212,8 @@ function App() {
     <div className="h-screen flex flex-col py-8 max-w-7xl mx-auto sm:px-6 lg:px-8">
       <Alert message="Not enough letters" isOpen={isNotEnoughLetters} />
       <Alert message="Word not found" isOpen={isWordNotFoundAlertOpen} />
-      <Alert
-        message={`The word was ${solution}`}
-        isOpen={isAnswerToastOpen}
-        variant="info"
-      />
-      <Alert message="Great!" isOpen={isWinToastOpen} variant="info" />
+      <Alert message={`The word was ${solution}`} isOpen={isAnswerToastOpen} />
+      <Alert message="Great!" isOpen={isWinToastOpen} />
       <div className="flex w-full max-w-[28rem] mx-auto items-center mb-4">
         <Logo />
         <button
