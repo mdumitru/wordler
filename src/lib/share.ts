@@ -10,7 +10,6 @@ export const countLetters = (guesses: string[]) =>
   guesses.reduce((total, guess) => total + guess.length, 0);
 
 // Spoiler-free result: a score line followed by one emoji row per guess.
-// `guesses` must be the player's own guesses, without any revealed answer row.
 export const getShareText = (
   guesses: string[],
   solution: string,

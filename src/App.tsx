@@ -19,6 +19,8 @@ import {
   prefersReducedMotion,
 } from "./lib/reveal";
 
+const ANSWER_TOAST_MS = 5000;
+
 function App() {
   const [solution, setSolution] = useState(getWordOfDay);
   const [guesses, setGuesses] = useState<string[]>([]);
@@ -31,27 +33,39 @@ function App() {
   const [isNotEnoughLetters, setIsNotEnoughLetters] = useState(false);
 
   const [shareLabel, setShareLabel] = useState("Share");
-  const [isShareVisible, setIsShareVisible] = useState(false);
-  // How long the board's end-of-game animations run; Share waits for them.
+  // Share and the answer toast wait until the board's final animations end.
+  const [isEndAnimationDone, setIsEndAnimationDone] = useState(false);
   const [endAnimationMs, setEndAnimationMs] = useState(0);
+  const [isAnswerToastOpen, setIsAnswerToastOpen] = useState(false);
 
   const maxGuesses = getMaxGuesses(solution);
   const isGameOver = isGameWon || isAnswerRevealed;
-  // A revealed answer row is not one of the player's guesses.
-  const playerGuesses = isAnswerRevealed ? guesses.slice(0, -1) : guesses;
-  const lettersUsed = countLetters(playerGuesses);
+  const lettersUsed = countLetters(guesses);
 
   useEffect(() => {
     if (!isGameOver) {
-      setIsShareVisible(false);
+      setIsEndAnimationDone(false);
       return;
     }
     const timer = setTimeout(
-      () => setIsShareVisible(true),
+      () => setIsEndAnimationDone(true),
       prefersReducedMotion() ? 0 : endAnimationMs,
     );
     return () => clearTimeout(timer);
   }, [isGameOver, endAnimationMs]);
+
+  useEffect(() => {
+    if (!isAnswerRevealed || !isEndAnimationDone) {
+      setIsAnswerToastOpen(false);
+      return;
+    }
+    setIsAnswerToastOpen(true);
+    const timer = setTimeout(
+      () => setIsAnswerToastOpen(false),
+      ANSWER_TOAST_MS,
+    );
+    return () => clearTimeout(timer);
+  }, [isAnswerRevealed, isEndAnimationDone]);
 
   const onChar = (value: string) => {
     if (!isAnswerRevealed && currentGuess.length < MAX_WORD_LENGTH) {
@@ -95,11 +109,9 @@ function App() {
         setGuesses([...guesses, currentGuess]);
         setIsGameWon(true);
       } else if (guesses.length + 1 >= maxGuesses) {
-        // Out of guesses: reveal the answer the same way giving up does.
-        setEndAnimationMs(
-          getRowRevealMs(currentGuess.length) + getRowRevealMs(solution.length),
-        );
-        setGuesses([...guesses, currentGuess, solution]);
+        // Out of guesses: the answer toast follows the last row's reveal.
+        setEndAnimationMs(getRowRevealMs(currentGuess.length));
+        setGuesses([...guesses, currentGuess]);
         setIsAnswerRevealed(true);
       } else {
         setGuesses([...guesses, currentGuess]);
@@ -120,17 +132,15 @@ function App() {
   const onGiveUp = (e: React.MouseEvent<HTMLButtonElement>) => {
     // Drop focus so a later physical Enter key does not click this button again.
     e.currentTarget.blur();
-    setEndAnimationMs(getRowRevealMs(solution.length));
+    setEndAnimationMs(0);
     setIsAnswerRevealed(true);
-    // Reveal the answer as a final, fully-correct row on the board.
-    setGuesses([...guesses, solution]);
     setCurrentGuess("");
   };
 
   const onShare = async (e: React.MouseEvent<HTMLButtonElement>) => {
     // Drop focus so a later physical Enter key does not click this button again.
     e.currentTarget.blur();
-    const text = getShareText(playerGuesses, solution, maxGuesses, isGameWon);
+    const text = getShareText(guesses, solution, maxGuesses, isGameWon);
     try {
       await navigator.clipboard.writeText(text);
       setShareLabel("Copied!");
@@ -145,6 +155,11 @@ function App() {
     <div className="h-screen flex flex-col py-8 max-w-7xl mx-auto sm:px-6 lg:px-8">
       <Alert message="Not enough letters" isOpen={isNotEnoughLetters} />
       <Alert message="Word not found" isOpen={isWordNotFoundAlertOpen} />
+      <Alert
+        message={`The word was ${solution}`}
+        isOpen={isAnswerToastOpen}
+        variant="info"
+      />
       <div className="flex w-80 mx-auto items-center mb-4">
         <h1 className="text-xl grow font-bold">Wordler</h1>
         <button
@@ -177,7 +192,7 @@ function App() {
         maxGuesses={maxGuesses}
         isGameWon={isGameWon}
       />
-      {isShareVisible && (
+      {isEndAnimationDone && (
         <button
           type="button"
           className="mx-auto px-4 py-2 text-sm font-medium rounded text-white bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"

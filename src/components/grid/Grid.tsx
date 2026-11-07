@@ -1,5 +1,4 @@
 import { useEffect, useRef } from "react";
-import { getRowRevealMs } from "../../lib/reveal";
 import { CompletedRow } from "./CompletedRow";
 import { CurrentRow } from "./CurrentRow";
 import { EmptyRow } from "./EmptyRow";
@@ -24,15 +23,9 @@ export const Grid = ({
     Array(Math.max(0, maxGuesses - 1 - guesses.length)),
   );
   const scrollRef = useRef<HTMLDivElement>(null);
-  // Rows added in the same update (a final wrong guess plus the revealed
-  // answer) reveal one after another rather than all at once.
+  // Only rows added since the last render play the reveal animation.
   const prevCountRef = useRef(guesses.length);
   const firstNewRow = Math.min(prevCountRef.current, guesses.length);
-  const revealDelays = guesses.map((_, i) =>
-    guesses
-      .slice(firstNewRow, i)
-      .reduce((ms, guess) => ms + getRowRevealMs(guess.length), 0),
-  );
 
   useEffect(() => {
     prevCountRef.current = guesses.length;
@@ -66,7 +59,7 @@ export const Grid = ({
               key={i}
               guess={guess}
               solution={solution}
-              revealDelayMs={i >= firstNewRow ? revealDelays[i] : undefined}
+              revealDelayMs={i >= firstNewRow ? 0 : undefined}
               isWinningRow={isGameWon && i === guesses.length - 1}
             />
           ))}
