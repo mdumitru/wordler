@@ -7,6 +7,7 @@ import { AboutModal } from "./components/modals/AboutModal";
 import { InfoModal } from "./components/modals/InfoModal";
 import { WinModal } from "./components/modals/WinModal";
 import { MAX_WORD_LENGTH } from "./constants/settings";
+import { getRowRevealMs } from "./lib/reveal";
 import {
   isWordInWordList,
   getWordOfDay,
@@ -29,10 +30,16 @@ function App() {
   const maxGuesses = getMaxGuesses(solution);
 
   useEffect(() => {
-    if (isGameWon) {
-      setIsWinModalOpen(true);
+    if (!isGameWon) {
+      return;
     }
-  }, [isGameWon]);
+    // Let the winning row finish flipping before the modal covers it.
+    const timer = setTimeout(
+      () => setIsWinModalOpen(true),
+      getRowRevealMs(solution.length),
+    );
+    return () => clearTimeout(timer);
+  }, [isGameWon, solution]);
 
   const onChar = (value: string) => {
     if (!isAnswerRevealed && currentGuess.length < MAX_WORD_LENGTH) {

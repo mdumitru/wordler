@@ -23,3 +23,40 @@
 .board-scroll::-webkit-scrollbar-corner {
   background-color: transparent;
 }
+
+/* Tile reveal: flip shut, swap to the result colour while edge-on, flip open.
+   cell-reveal-hide holds the unrevealed colours for the first half of the flip
+   (and, via backwards fill, during the stagger delay); once it ends the tile's
+   own status colours apply. */
+.cell-reveal {
+  animation-name: cell-reveal-flip, cell-reveal-hide;
+  animation-timing-function: ease-in-out, linear;
+  animation-fill-mode: backwards, backwards;
+}
+
+@keyframes cell-reveal-flip {
+  0% {
+    transform: rotateX(0deg);
+  }
+  50% {
+    transform: rotateX(90deg);
+  }
+  100% {
+    transform: rotateX(0deg);
+  }
+}
+
+@keyframes cell-reveal-hide {
+  from,
+  to {
+    background-color: #ffffff;
+    border-color: #e2e8f0; /* slate-200 */
+    color: #000000;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cell-reveal {
+    animation: none;
+  }
+}

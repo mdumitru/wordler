@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { VISIBLE_ROWS } from "../../constants/settings";
+import { getRowRevealMs } from "../../lib/reveal";
 import { CompletedRow } from "./CompletedRow";
 import { CurrentRow } from "./CurrentRow";
 import { EmptyRow } from "./EmptyRow";
@@ -25,6 +26,19 @@ export const Grid = ({
     Array(Math.max(0, maxGuesses - 1 - guesses.length)),
   );
   const scrollRef = useRef<HTMLDivElement>(null);
+  // Rows added in the same update (a final wrong guess plus the revealed
+  // answer) reveal one after another rather than all at once.
+  const prevCountRef = useRef(guesses.length);
+  const firstNewRow = Math.min(prevCountRef.current, guesses.length);
+  const revealDelays = guesses.map((_, i) =>
+    guesses
+      .slice(firstNewRow, i)
+      .reduce((ms, guess) => ms + getRowRevealMs(guess.length), 0),
+  );
+
+  useEffect(() => {
+    prevCountRef.current = guesses.length;
+  }, [guesses.length]);
   const rowsRef = useRef<HTMLDivElement>(null);
 
   // Keep the active row (or the last row once the board is full) in view.
@@ -48,7 +62,12 @@ export const Grid = ({
       >
         <div ref={rowsRef} className="w-max mx-auto">
           {guesses.map((guess, i) => (
-            <CompletedRow key={i} guess={guess} solution={solution} />
+            <CompletedRow
+              key={i}
+              guess={guess}
+              solution={solution}
+              revealDelayMs={i >= firstNewRow ? revealDelays[i] : undefined}
+            />
           ))}
           {hasGuessesLeft && <CurrentRow guess={currentGuess} />}
           {empties.map((_, i) => (
