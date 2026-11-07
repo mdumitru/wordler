@@ -19,7 +19,7 @@ function App() {
   const [guesses, setGuesses] = useState<string[]>([]);
   const [currentGuess, setCurrentGuess] = useState("");
   const [isGameWon, setIsGameWon] = useState(false);
-  const [hasGivenUp, setHasGivenUp] = useState(false);
+  const [isAnswerRevealed, setIsAnswerRevealed] = useState(false);
   const [isWinModalOpen, setIsWinModalOpen] = useState(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
@@ -27,7 +27,6 @@ function App() {
   const [isNotEnoughLetters, setIsNotEnoughLetters] = useState(false);
 
   const maxGuesses = getMaxGuesses(solution);
-  const isOutOfGuesses = !isGameWon && guesses.length >= maxGuesses;
 
   useEffect(() => {
     if (isGameWon) {
@@ -36,11 +35,7 @@ function App() {
   }, [isGameWon]);
 
   const onChar = (value: string) => {
-    if (
-      !hasGivenUp &&
-      !isOutOfGuesses &&
-      currentGuess.length < MAX_WORD_LENGTH
-    ) {
+    if (!isAnswerRevealed && currentGuess.length < MAX_WORD_LENGTH) {
       setCurrentGuess(`${currentGuess}${value}`);
     }
   };
@@ -50,7 +45,7 @@ function App() {
   };
 
   const onEnter = () => {
-    if (hasGivenUp || isOutOfGuesses) {
+    if (isAnswerRevealed) {
       return;
     }
 
@@ -71,11 +66,17 @@ function App() {
     const winningWord = currentGuess === solution;
 
     if (!isGameWon) {
-      setGuesses([...guesses, currentGuess]);
       setCurrentGuess("");
 
       if (winningWord) {
+        setGuesses([...guesses, currentGuess]);
         setIsGameWon(true);
+      } else if (guesses.length + 1 >= maxGuesses) {
+        // Out of guesses: reveal the answer the same way giving up does.
+        setGuesses([...guesses, currentGuess, solution]);
+        setIsAnswerRevealed(true);
+      } else {
+        setGuesses([...guesses, currentGuess]);
       }
     }
   };
@@ -87,14 +88,14 @@ function App() {
     setGuesses([]);
     setCurrentGuess("");
     setIsGameWon(false);
-    setHasGivenUp(false);
+    setIsAnswerRevealed(false);
     setIsWinModalOpen(false);
   };
 
   const onGiveUp = (e: React.MouseEvent<HTMLButtonElement>) => {
     // Drop focus so a later physical Enter key does not click this button again.
     e.currentTarget.blur();
-    setHasGivenUp(true);
+    setIsAnswerRevealed(true);
     // Reveal the answer as a final, fully-correct row on the board.
     setGuesses([...guesses, solution]);
     setCurrentGuess("");
@@ -117,7 +118,7 @@ function App() {
           type="button"
           className="mr-3 px-2.5 py-1.5 text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={onGiveUp}
-          disabled={isGameWon || hasGivenUp}
+          disabled={isGameWon || isAnswerRevealed}
         >
           Give up
         </button>
