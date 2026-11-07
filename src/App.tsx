@@ -12,7 +12,7 @@ import {
   getRandomWord,
   getMaxGuesses,
 } from "./lib/words";
-import { getShareText } from "./lib/share";
+import { countLetters, getShareText } from "./lib/share";
 import {
   getRowBounceMs,
   getRowRevealMs,
@@ -37,6 +37,9 @@ function App() {
 
   const maxGuesses = getMaxGuesses(solution);
   const isGameOver = isGameWon || isAnswerRevealed;
+  // A revealed answer row is not one of the player's guesses.
+  const playerGuesses = isAnswerRevealed ? guesses.slice(0, -1) : guesses;
+  const lettersUsed = countLetters(playerGuesses);
 
   useEffect(() => {
     if (!isGameOver) {
@@ -127,8 +130,6 @@ function App() {
   const onShare = async (e: React.MouseEvent<HTMLButtonElement>) => {
     // Drop focus so a later physical Enter key does not click this button again.
     e.currentTarget.blur();
-    // A revealed answer row is not one of the player's guesses.
-    const playerGuesses = isAnswerRevealed ? guesses.slice(0, -1) : guesses;
     const text = getShareText(playerGuesses, solution, maxGuesses, isGameWon);
     try {
       await navigator.clipboard.writeText(text);
@@ -166,6 +167,9 @@ function App() {
           onClick={() => setIsInfoModalOpen(true)}
         />
       </div>
+      <p className="text-center text-sm text-gray-500">
+        Letters used: <span className="font-bold">{lettersUsed}</span>
+      </p>
       <Grid
         guesses={guesses}
         currentGuess={currentGuess}

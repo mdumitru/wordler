@@ -6,6 +6,9 @@ const EMOJI: Record<CharStatus, string> = {
   absent: "⬜",
 };
 
+export const countLetters = (guesses: string[]) =>
+  guesses.reduce((total, guess) => total + guess.length, 0);
+
 // Spoiler-free result: a score line followed by one emoji row per guess.
 // `guesses` must be the player's own guesses, without any revealed answer row.
 export const getShareText = (
@@ -20,5 +23,9 @@ export const getShareText = (
       .map((status) => EMOJI[status] ?? EMOJI.absent)
       .join(""),
   );
-  return [`Not Wordle ${score}/${maxGuesses}`, "", ...rows].join("\n");
+  const letters = countLetters(guesses);
+  const header = `Not Wordle ${score}/${maxGuesses} · ${letters} ${
+    letters === 1 ? "letter" : "letters"
+  }`;
+  return [header, "", ...rows].join("\n");
 };
