@@ -6,7 +6,7 @@ import { Keyboard } from "./components/keyboard/Keyboard";
 import { AboutModal } from "./components/modals/AboutModal";
 import { InfoModal } from "./components/modals/InfoModal";
 import { WinModal } from "./components/modals/WinModal";
-import { MAX_WORD_LENGTH, MAX_CHALLENGES } from "./constants/settings";
+import { MAX_WORD_LENGTH } from "./constants/settings";
 import { isWordInWordList, getWordOfDay, getRandomWord } from "./lib/words";
 
 function App() {
@@ -19,7 +19,6 @@ function App() {
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
   const [isWordNotFoundAlertOpen, setIsWordNotFoundAlertOpen] = useState(false);
   const [isNotEnoughLetters, setIsNotEnoughLetters] = useState(false);
-  const [isGameLost, setIsGameLost] = useState(false);
 
   useEffect(() => {
     if (isGameWon) {
@@ -28,10 +27,7 @@ function App() {
   }, [isGameWon]);
 
   const onChar = (value: string) => {
-    if (
-      currentGuess.length < MAX_WORD_LENGTH &&
-      guesses.length < MAX_CHALLENGES
-    ) {
+    if (currentGuess.length < MAX_WORD_LENGTH) {
       setCurrentGuess(`${currentGuess}${value}`);
     }
   };
@@ -57,19 +53,12 @@ function App() {
 
     const winningWord = currentGuess === solution;
 
-    if (guesses.length < MAX_CHALLENGES && !isGameWon) {
+    if (!isGameWon) {
       setGuesses([...guesses, currentGuess]);
       setCurrentGuess("");
 
       if (winningWord) {
-        return setIsGameWon(true);
-      }
-
-      if (guesses.length === MAX_CHALLENGES - 1) {
-        setIsGameLost(true);
-        return setTimeout(() => {
-          setIsGameLost(false);
-        }, 2000);
+        setIsGameWon(true);
       }
     }
   };
@@ -81,7 +70,6 @@ function App() {
     setGuesses([]);
     setCurrentGuess("");
     setIsGameWon(false);
-    setIsGameLost(false);
     setIsWinModalOpen(false);
   };
 
@@ -89,10 +77,6 @@ function App() {
     <div className="py-8 max-w-7xl mx-auto sm:px-6 lg:px-8">
       <Alert message="Not enough letters" isOpen={isNotEnoughLetters} />
       <Alert message="Word not found" isOpen={isWordNotFoundAlertOpen} />
-      <Alert
-        message={`You lost, the word was ${solution}`}
-        isOpen={isGameLost}
-      />
       <div className="flex w-80 mx-auto items-center mb-8">
         <h1 className="text-xl grow font-bold">Not Wordle</h1>
         <button
