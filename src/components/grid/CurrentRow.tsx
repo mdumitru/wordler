@@ -12,7 +12,7 @@ export const CurrentRow = ({ guess }: Props) => {
   );
 
   return (
-    <div className="flex mb-1">
+    <div className="flex mb-1" role="group" aria-label="Current guess">
       {splitGuess.map((letter, i) => (
         <Cell key={i} value={letter} />
       ))}

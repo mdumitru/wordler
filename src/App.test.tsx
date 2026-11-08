@@ -33,6 +33,11 @@ const submit = (word: string) => {
 
 const board = () => screen.getByTestId("board");
 
+// The visible toast; the screen-reader live region repeats its text.
+const TOAST = { selector: '[aria-hidden="true"]' };
+const toast = (text: string) => screen.getByText(text, TOAST);
+const queryToast = (text: string) => screen.queryByText(text, TOAST);
+
 const mockFetch = (fail = false) => {
   window.fetch = jest.fn((url: RequestInfo) => {
     const body = WORD_FILES[String(url)];
@@ -90,10 +95,10 @@ test("New word never shows the new answer in the fading toast", async () => {
   act(() => {
     jest.advanceTimersByTime(10);
   });
-  expect(screen.getByText("The word was CAT")).toBeInTheDocument();
+  expect(toast("The word was CAT")).toBeInTheDocument();
   fireEvent.click(screen.getByText("New word"));
-  expect(screen.queryByText("The word was DOG")).not.toBeInTheDocument();
-  expect(screen.getByText("The word was CAT")).toBeInTheDocument();
+  expect(queryToast("The word was DOG")).not.toBeInTheDocument();
+  expect(toast("The word was CAT")).toBeInTheDocument();
 });
 
 test("a repeated invalid Enter keeps the toast up for 2s after the last press", async () => {
@@ -107,14 +112,34 @@ test("a repeated invalid Enter keeps the toast up for 2s after the last press", 
   act(() => {
     jest.advanceTimersByTime(1900);
   });
-  expect(screen.getByText("Word not found")).toBeInTheDocument();
+  expect(toast("Word not found")).toBeInTheDocument();
 });
 
 test("guesses shorter than three letters are not enough", async () => {
   await renderGame();
   type("CA");
   press("Enter");
-  expect(screen.getByText("Not enough letters")).toBeInTheDocument();
+  expect(toast("Not enough letters")).toBeInTheDocument();
+  expect(screen.getByRole("status")).toHaveTextContent("Not enough letters");
+});
+
+test("tiles, rows and keys have accessible names", async () => {
+  await renderGame();
+  submit("COT");
+  expect(screen.getByRole("group", { name: "Guess: COT" })).toBeInTheDocument();
+  expect(screen.getByRole("img", { name: "C correct" })).toBeInTheDocument();
+  expect(screen.getByRole("img", { name: "O absent" })).toBeInTheDocument();
+  act(() => {
+    jest.runOnlyPendingTimers();
+  });
+  expect(
+    screen.getByRole("button", { name: "C, correct" }),
+  ).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Enter" })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Delete" })).toBeInTheDocument();
+  expect(
+    screen.getByRole("button", { name: "How to play" }),
+  ).toBeInTheDocument();
 });
 
 const keyDown = (init: KeyboardEventInit) =>
@@ -190,11 +215,11 @@ test("refreshing a finished game restores it with Share and no toast", async () 
   await renderGame();
   expect(board().textContent).toBe("COTCAT");
   expect(screen.getByText("Give up")).toBeDisabled();
-  expect(screen.queryByText("Great!")).not.toBeInTheDocument();
+  expect(queryToast("Great!")).not.toBeInTheDocument();
   act(() => {
     jest.advanceTimersByTime(5000);
   });
-  expect(screen.queryByText("Great!")).not.toBeInTheDocument();
+  expect(queryToast("Great!")).not.toBeInTheDocument();
   expect(screen.getByText("Share")).toBeInTheDocument();
 });
 

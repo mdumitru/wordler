@@ -79,6 +79,10 @@ export const Grid = ({
     <div className="flex flex-col min-h-0 pb-2 sm:pb-6">
       <div
         ref={scrollRef}
+        // Scrollable, so keyboard users can focus it to scroll; name it.
+        tabIndex={0}
+        role="region"
+        aria-label="Board"
         // Top padding leaves room for winning tiles to bounce without clipping.
         className="board-scroll relative min-h-0 overflow-auto pt-6"
       >

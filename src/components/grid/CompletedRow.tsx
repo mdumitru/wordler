@@ -32,7 +32,7 @@ export const CompletedRow = ({
   const bounceStaggerMs = getBounceStaggerMs(guess.length);
 
   return (
-    <div className="flex mb-1">
+    <div className="flex mb-1" role="group" aria-label={`Guess: ${guess}`}>
       {guess.split("").map((letter, i) => (
         // The bounce lives on a wrapper so its transform does not replace
         // the tile's own flip animation.

@@ -34,9 +34,24 @@ export const Key = ({
     },
   );
 
+  // Screen readers hear the letter's state too, e.g. "A, correct".
+  const label =
+    value === "ENTER"
+      ? "Enter"
+      : value === "DELETE"
+        ? "Delete"
+        : status
+          ? `${value}, ${status}`
+          : value;
+
   return (
-    <div className={classes} onClick={() => onClick(value)}>
+    <button
+      type="button"
+      aria-label={label}
+      className={classes}
+      onClick={() => onClick(value)}
+    >
       {children || value}
-    </div>
+    </button>
   );
 };

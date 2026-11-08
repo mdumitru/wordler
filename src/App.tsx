@@ -287,10 +287,14 @@ function Game() {
             <MoonIcon className="h-5 w-5 sm:h-6 sm:w-6" />
           )}
         </button>
-        <InformationCircleIcon
-          className="h-5 w-5 sm:h-6 sm:w-6 shrink-0 cursor-pointer"
+        <button
+          type="button"
+          className="shrink-0"
+          aria-label="How to play"
           onClick={() => setIsInfoModalOpen(true)}
-        />
+        >
+          <InformationCircleIcon className="h-5 w-5 sm:h-6 sm:w-6" />
+        </button>
       </div>
       <p className="text-center text-sm text-gray-500 dark:text-gray-400">
         Letters used: <span className="font-bold">{lettersUsed}</span>
