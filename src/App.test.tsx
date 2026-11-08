@@ -97,8 +97,12 @@ test("the input row keeps one empty box after five or more letters", async () =>
   expect(row().children.length).toBe(5);
   type("ABCD");
   expect(row().children.length).toBe(5);
+  expect(row().querySelector(".border-dashed")).toBeNull();
   type("E");
   expect(row().children.length).toBe(6);
+  // Only the extra box past the fifth letter is dashed.
+  expect(row().querySelectorAll(".border-dashed")).toHaveLength(1);
+  expect(row().lastElementChild).toHaveClass("border-dashed");
   type("F");
   expect(row().children.length).toBe(7);
   press("Backspace");

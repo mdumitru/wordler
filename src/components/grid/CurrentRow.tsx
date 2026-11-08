@@ -21,7 +21,10 @@ export const CurrentRow = ({ guess }: Props) => {
         <Cell key={i} value={letter} />
       ))}
       {emptyCells.map((_, i) => (
-        <Cell key={`empty-${i}`} />
+        <Cell
+          key={`empty-${i}`}
+          isDashed={splitGuess.length >= MIN_ROW_CELLS}
+        />
       ))}
     </div>
   );

@@ -9,15 +9,25 @@ type Props = {
   revealDelayMs?: number;
   // "sm" for the smaller example tiles in the help text.
   size?: "md" | "sm";
+  // Dashed border for the extra box that hints the row can grow.
+  isDashed?: boolean;
 };
 
-export const Cell = ({ value, status, revealDelayMs, size = "md" }: Props) => {
+export const Cell = ({
+  value,
+  status,
+  revealDelayMs,
+  size = "md",
+  isDashed = false,
+}: Props) => {
   const isRevealing = revealDelayMs !== undefined;
   const classes = classnames(
-    "shrink-0 border-solid border-2 flex items-center justify-center mx-0.5 font-bold rounded",
+    "shrink-0 border-2 flex items-center justify-center mx-0.5 font-bold rounded",
     {
       "w-14 h-14 text-2xl sm:w-16 sm:h-16 sm:text-3xl": size === "md",
       "w-10 h-10 text-xl": size === "sm",
+      "border-dashed": isDashed,
+      "border-solid": !isDashed,
       "bg-white dark:bg-wordle-night-bg border-wordle-empty dark:border-wordle-night-empty":
         !status && !value,
       "bg-white dark:bg-wordle-night-bg border-wordle-filled dark:border-wordle-night-filled":
