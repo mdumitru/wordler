@@ -6,7 +6,8 @@ import { CharStatus } from "../../lib/statuses";
 type Props = {
   children?: ReactNode;
   value: KeyValue;
-  width?: number;
+  // Enter and Delete take one and a half letter widths.
+  isWide?: boolean;
   status?: CharStatus;
   onClick: (value: KeyValue) => void;
 };
@@ -14,13 +15,15 @@ type Props = {
 export const Key = ({
   children,
   status,
-  width = 40,
+  isWide = false,
   value,
   onClick,
 }: Props) => {
   const classes = classnames(
-    "flex items-center justify-center rounded mx-0.5 text-xs font-bold cursor-pointer hover:brightness-95 active:brightness-90",
+    "flex items-center justify-center h-14 rounded mx-0.5 text-xs font-bold cursor-pointer select-none touch-manipulation hover:brightness-95 active:brightness-90",
     {
+      "flex-1 max-w-[40px]": !isWide,
+      "flex-[1.5] max-w-[65px]": isWide,
       "bg-wordle-empty dark:bg-wordle-night-key dark:text-white": !status,
       "bg-wordle-absent dark:bg-wordle-night-absent text-white":
         status === "absent",
@@ -32,11 +35,7 @@ export const Key = ({
   );
 
   return (
-    <div
-      style={{ width: `${width}px`, height: "58px" }}
-      className={classes}
-      onClick={() => onClick(value)}
-    >
+    <div className={classes} onClick={() => onClick(value)}>
       {children || value}
     </div>
   );

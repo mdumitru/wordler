@@ -7,13 +7,17 @@ type Props = {
   status?: CharStatus;
   // When set, the tile plays the flip reveal starting after this many ms.
   revealDelayMs?: number;
+  // "sm" for the smaller example tiles in the help text.
+  size?: "md" | "sm";
 };
 
-export const Cell = ({ value, status, revealDelayMs }: Props) => {
+export const Cell = ({ value, status, revealDelayMs, size = "md" }: Props) => {
   const isRevealing = revealDelayMs !== undefined;
   const classes = classnames(
-    "w-16 h-16 shrink-0 border-solid border-2 flex items-center justify-center mx-0.5 text-3xl font-bold rounded",
+    "shrink-0 border-solid border-2 flex items-center justify-center mx-0.5 font-bold rounded",
     {
+      "w-14 h-14 text-2xl sm:w-16 sm:h-16 sm:text-3xl": size === "md",
+      "w-10 h-10 text-xl": size === "sm",
       "bg-white dark:bg-wordle-night-bg border-wordle-empty dark:border-wordle-night-empty":
         !status && !value,
       "bg-white dark:bg-wordle-night-bg border-wordle-filled dark:border-wordle-night-filled":

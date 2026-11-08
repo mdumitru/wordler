@@ -22,6 +22,18 @@ html.dark {
   --scroll-thumb: #565758;
 }
 
+/* Dynamic viewport height keeps the keyboard above mobile browser toolbars
+   (iOS Safari); older browsers fall back to 100vh. */
+.app-height {
+  height: 100vh;
+}
+
+@supports (height: 100dvh) {
+  .app-height {
+    height: 100dvh;
+  }
+}
+
 body {
   background-color: var(--page-bg);
   color: var(--page-text);

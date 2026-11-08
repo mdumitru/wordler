@@ -86,11 +86,11 @@ export const InfoModal = ({ isOpen, handleClose }: Props) => {
 
                     <div>
                       <div className="flex justify-center mb-1">
-                        <Cell value="W" status="correct" />
-                        <Cell value="E" />
-                        <Cell value="A" />
-                        <Cell value="R" />
-                        <Cell value="Y" />
+                        <Cell size="sm" value="W" status="correct" />
+                        <Cell size="sm" value="E" />
+                        <Cell size="sm" value="A" />
+                        <Cell size="sm" value="R" />
+                        <Cell size="sm" value="Y" />
                       </div>
                       <p>
                         <strong>W</strong> is in the word and in the correct
@@ -100,11 +100,11 @@ export const InfoModal = ({ isOpen, handleClose }: Props) => {
 
                     <div>
                       <div className="flex justify-center mb-1">
-                        <Cell value="P" />
-                        <Cell value="I" status="present" />
-                        <Cell value="L" />
-                        <Cell value="O" />
-                        <Cell value="T" />
+                        <Cell size="sm" value="P" />
+                        <Cell size="sm" value="I" status="present" />
+                        <Cell size="sm" value="L" />
+                        <Cell size="sm" value="O" />
+                        <Cell size="sm" value="T" />
                       </div>
                       <p>
                         <strong>I</strong> is in the word but in the wrong spot.
@@ -113,11 +113,11 @@ export const InfoModal = ({ isOpen, handleClose }: Props) => {
 
                     <div>
                       <div className="flex justify-center mb-1">
-                        <Cell value="V" />
-                        <Cell value="A" />
-                        <Cell value="G" />
-                        <Cell value="U" status="absent" />
-                        <Cell value="E" />
+                        <Cell size="sm" value="V" />
+                        <Cell size="sm" value="A" />
+                        <Cell size="sm" value="G" />
+                        <Cell size="sm" value="U" status="absent" />
+                        <Cell size="sm" value="E" />
                       </div>
                       <p>
                         <strong>U</strong> is not in the word in any spot.
@@ -126,9 +126,9 @@ export const InfoModal = ({ isOpen, handleClose }: Props) => {
 
                     <div>
                       <div className="flex justify-center mb-1">
-                        <Cell value="C" status="correct" />
-                        <Cell value="A" status="correct" />
-                        <Cell value="T" status="correct" />
+                        <Cell size="sm" value="C" status="correct" />
+                        <Cell size="sm" value="A" status="correct" />
+                        <Cell size="sm" value="T" status="correct" />
                       </div>
                       <p>
                         All green, but not a win: the word could be{" "}

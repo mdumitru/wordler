@@ -20,7 +20,7 @@ export const Alert = ({ isOpen, message }: Props) => {
       leaveFrom="opacity-100"
       leaveTo="opacity-0"
     >
-      <div className="absolute z-20 top-20 left-1/2 transform -translate-x-1/2 px-4 py-3 rounded bg-black text-white dark:bg-white dark:text-black text-sm font-bold whitespace-nowrap pointer-events-none">
+      <div className="fixed z-20 top-20 left-1/2 transform -translate-x-1/2 px-4 py-3 rounded bg-black text-white dark:bg-white dark:text-black text-sm font-bold whitespace-nowrap pointer-events-none">
         {message}
       </div>
     </Transition>

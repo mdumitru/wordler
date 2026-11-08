@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { MIN_GUESSES } from "../../constants/settings";
 import { CompletedRow } from "./CompletedRow";
 import { CurrentRow } from "./CurrentRow";
@@ -37,8 +37,9 @@ export const Grid = ({
   }, [guesses.length]);
   const rowsRef = useRef<HTMLDivElement>(null);
 
-  // Keep the active row (or the last row once the board is full) in view.
-  useEffect(() => {
+  // Keep the active row (or the last row once the board is full) in view,
+  // and, while typing a long guess, its newest letter.
+  const scrollToActive = useCallback(() => {
     const container = scrollRef.current;
     const rows = rowsRef.current?.children;
     if (!container || !rows || rows.length === 0) {
@@ -47,12 +48,35 @@ export const Grid = ({
     const row = rows[Math.min(guesses.length, rows.length - 1)] as HTMLElement;
     const rowBottom = row.offsetTop + row.offsetHeight;
     container.scrollTop = Math.max(0, rowBottom - container.clientHeight);
-  }, [guesses.length]);
+
+    if (!showCurrentRow || currentGuess.length === 0) {
+      return;
+    }
+    const cell = row.children[currentGuess.length - 1] as
+      HTMLElement | undefined;
+    if (!cell) {
+      return;
+    }
+    // Cells are positioned relative to the scroll container (its offsetParent).
+    const cellLeft = cell.offsetLeft;
+    const cellRight = cellLeft + cell.offsetWidth;
+    if (cellRight > container.scrollLeft + container.clientWidth) {
+      container.scrollLeft = cellRight - container.clientWidth;
+    } else if (cellLeft < container.scrollLeft) {
+      container.scrollLeft = cellLeft;
+    }
+  }, [guesses.length, currentGuess.length, showCurrentRow]);
+
+  useEffect(() => {
+    scrollToActive();
+    window.addEventListener("resize", scrollToActive);
+    return () => window.removeEventListener("resize", scrollToActive);
+  }, [scrollToActive]);
 
   return (
     // min-h-0 lets the board shrink to the space left above the keyboard,
     // so it only scrolls once the rows no longer fit on screen.
-    <div className="flex flex-col min-h-0 pb-6">
+    <div className="flex flex-col min-h-0 pb-2 sm:pb-6">
       <div
         ref={scrollRef}
         // Top padding leaves room for winning tiles to bounce without clipping.
