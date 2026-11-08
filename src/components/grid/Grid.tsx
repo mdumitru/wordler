@@ -38,7 +38,7 @@ export const Grid = ({
   const rowsRef = useRef<HTMLDivElement>(null);
 
   // Keep the active row (or the last row once the board is full) in view,
-  // and, while typing a long guess, its newest letter.
+  // and, while typing a long guess, the empty box after its newest letter.
   const scrollToActive = useCallback(() => {
     const container = scrollRef.current;
     const rows = rowsRef.current?.children;
@@ -52,8 +52,8 @@ export const Grid = ({
     if (!showCurrentRow || currentGuess.length === 0) {
       return;
     }
-    const cell = row.children[currentGuess.length - 1] as
-      HTMLElement | undefined;
+    const cell = (row.children[currentGuess.length] ??
+      row.children[currentGuess.length - 1]) as HTMLElement | undefined;
     if (!cell) {
       return;
     }

@@ -91,6 +91,24 @@ test("renders the board and the letter count once the words load", async () => {
   expect(screen.getByText(/Letters used/)).toHaveTextContent("Letters used: 3");
 });
 
+test("the input row keeps one empty box after five or more letters", async () => {
+  await renderGame();
+  const row = () => screen.getByRole("group", { name: "Current guess" });
+  expect(row().children.length).toBe(5);
+  type("ABCD");
+  expect(row().children.length).toBe(5);
+  type("E");
+  expect(row().children.length).toBe(6);
+  type("F");
+  expect(row().children.length).toBe(7);
+  press("Backspace");
+  press("Backspace");
+  expect(row().children.length).toBe(5);
+  type("FGHIJKLMNOPQRSTUVWXYZ");
+  // Capped at the maximum word length: no empty box once it is full.
+  expect(row().children.length).toBe(20);
+});
+
 test("typing after a win changes nothing and the input row is gone", async () => {
   await renderGame();
   submit("CAT");
