@@ -1,5 +1,14 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
+import { readFileSync } from "fs";
+import { join } from "path";
 import App from "./App";
+
+const wordFile = (name: string) =>
+  readFileSync(join(__dirname, "../public/words", name), "utf8");
+const WORD_FILES: Record<string, string> = {
+  "/words/solutions.txt": wordFile("solutions.txt"),
+  "/words/guesses.txt": wordFile("guesses.txt"),
+};
 
 jest.mock("./lib/words", () => ({
   ...jest.requireActual("./lib/words"),
@@ -24,9 +33,28 @@ const submit = (word: string) => {
 
 const board = () => screen.getByTestId("board");
 
+const mockFetch = (fail = false) => {
+  window.fetch = jest.fn((url: RequestInfo) => {
+    const body = WORD_FILES[String(url)];
+    return Promise.resolve({
+      ok: !fail && body !== undefined,
+      status: fail ? 503 : 200,
+      text: () => Promise.resolve(body ?? ""),
+    } as Response);
+  });
+};
+
+// Renders the app and waits for the word lists to arrive.
+const renderGame = async () => {
+  const result = render(<App />);
+  await screen.findByTestId("board");
+  return result;
+};
+
 beforeEach(() => {
   jest.useFakeTimers();
   window.localStorage.clear();
+  mockFetch();
 });
 
 afterEach(() => {
@@ -36,8 +64,8 @@ afterEach(() => {
   jest.useRealTimers();
 });
 
-test("typing after a win changes nothing and the input row is gone", () => {
-  render(<App />);
+test("typing after a win changes nothing and the input row is gone", async () => {
+  await renderGame();
   submit("CAT");
   const rowsAfterWin = board().children.length;
   type("DOG");
@@ -47,8 +75,8 @@ test("typing after a win changes nothing and the input row is gone", () => {
   expect(rowsAfterWin).toBe(6);
 });
 
-test("typing after giving up changes nothing", () => {
-  render(<App />);
+test("typing after giving up changes nothing", async () => {
+  await renderGame();
   type("CO");
   fireEvent.click(screen.getByText("Give up"));
   type("DOG");
@@ -56,8 +84,8 @@ test("typing after giving up changes nothing", () => {
   expect(board().textContent).toBe("");
 });
 
-test("New word never shows the new answer in the fading toast", () => {
-  render(<App />);
+test("New word never shows the new answer in the fading toast", async () => {
+  await renderGame();
   fireEvent.click(screen.getByText("Give up"));
   act(() => {
     jest.advanceTimersByTime(10);
@@ -68,8 +96,8 @@ test("New word never shows the new answer in the fading toast", () => {
   expect(screen.getByText("The word was CAT")).toBeInTheDocument();
 });
 
-test("a repeated invalid Enter keeps the toast up for 2s after the last press", () => {
-  render(<App />);
+test("a repeated invalid Enter keeps the toast up for 2s after the last press", async () => {
+  await renderGame();
   type("ZZZ");
   press("Enter");
   act(() => {
@@ -82,8 +110,8 @@ test("a repeated invalid Enter keeps the toast up for 2s after the last press", 
   expect(screen.getByText("Word not found")).toBeInTheDocument();
 });
 
-test("guesses shorter than three letters are not enough", () => {
-  render(<App />);
+test("guesses shorter than three letters are not enough", async () => {
+  await renderGame();
   type("CA");
   press("Enter");
   expect(screen.getByText("Not enough letters")).toBeInTheDocument();
@@ -94,16 +122,16 @@ const keyDown = (init: KeyboardEventInit) =>
     fireEvent.keyDown(window, init);
   });
 
-test("holding Backspace keeps deleting", () => {
-  render(<App />);
+test("holding Backspace keeps deleting", async () => {
+  await renderGame();
   type("COT");
   keyDown({ key: "Backspace", code: "Backspace" });
   keyDown({ key: "Backspace", code: "Backspace", repeat: true });
   expect(board().textContent).toBe("C");
 });
 
-test("numpad Enter submits, a held Enter does not", () => {
-  render(<App />);
+test("numpad Enter submits, a held Enter does not", async () => {
+  await renderGame();
   type("CAT");
   keyDown({ key: "Enter", code: "Enter", repeat: true });
   expect(screen.getByText("Give up")).toBeEnabled();
@@ -111,8 +139,8 @@ test("numpad Enter submits, a held Enter does not", () => {
   expect(screen.getByText("Give up")).toBeDisabled();
 });
 
-test("keys do nothing while a modal is open; Enter submits after it closes", () => {
-  render(<App />);
+test("keys do nothing while a modal is open; Enter submits after it closes", async () => {
+  await renderGame();
   type("CA");
   // A mouse click focuses the button in Chrome, then opens the modal.
   screen.getByText("About this game").focus();
@@ -133,33 +161,33 @@ test("keys do nothing while a modal is open; Enter submits after it closes", () 
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 });
 
-test("listeners are attached once, not on every render", () => {
+test("listeners are attached once, not on every render", async () => {
   const add = jest.spyOn(window, "addEventListener");
-  render(<App />);
+  await renderGame();
   type("COT");
   expect(add.mock.calls.filter(([type]) => type === "keydown").length).toBe(1);
   add.mockRestore();
 });
 
-test("refreshing mid-game restores the board without a toast", () => {
-  const { unmount } = render(<App />);
+test("refreshing mid-game restores the board without a toast", async () => {
+  const { unmount } = await renderGame();
   submit("COT");
   type("CA");
   unmount();
-  render(<App />);
+  await renderGame();
   expect(board().textContent).toBe("COT");
   expect(screen.getByText("Give up")).toBeEnabled();
 });
 
-test("refreshing a finished game restores it with Share and no toast", () => {
-  const { unmount } = render(<App />);
+test("refreshing a finished game restores it with Share and no toast", async () => {
+  const { unmount } = await renderGame();
   submit("COT");
   submit("CAT");
   act(() => {
     jest.runOnlyPendingTimers();
   });
   unmount();
-  render(<App />);
+  await renderGame();
   expect(board().textContent).toBe("COTCAT");
   expect(screen.getByText("Give up")).toBeDisabled();
   expect(screen.queryByText("Great!")).not.toBeInTheDocument();
@@ -170,7 +198,7 @@ test("refreshing a finished game restores it with Share and no toast", () => {
   expect(screen.getByText("Share")).toBeInTheDocument();
 });
 
-test("a saved word that left the solution list is discarded", () => {
+test("a saved word that left the solution list is discarded", async () => {
   window.localStorage.setItem(
     "game",
     JSON.stringify({
@@ -180,6 +208,6 @@ test("a saved word that left the solution list is discarded", () => {
       isAnswerRevealed: false,
     }),
   );
-  render(<App />);
+  await renderGame();
   expect(board().textContent).toBe("");
 });

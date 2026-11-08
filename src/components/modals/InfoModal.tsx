@@ -2,10 +2,7 @@ import { Fragment } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { Cell } from "../grid/Cell";
 import { MAX_WORD_LENGTH, MIN_GUESSES } from "../../constants/settings";
-import { WORDS } from "../../constants/wordlist";
-
-const SHORTEST = Math.min(...WORDS.map((word) => word.length));
-const LONGEST = Math.max(...WORDS.map((word) => word.length));
+import { getSolutionLengthRange } from "../../lib/words";
 
 const ordinal = (n: number) => {
   const suffixes = ["th", "st", "nd", "rd"];
@@ -19,6 +16,7 @@ type Props = {
 };
 
 export const InfoModal = ({ isOpen, handleClose }: Props) => {
+  const { shortest, longest } = getSolutionLengthRange();
   return (
     <Transition.Root show={isOpen} as={Fragment}>
       <Dialog
@@ -67,7 +65,7 @@ export const InfoModal = ({ isOpen, handleClose }: Props) => {
                   <div className="mt-2 space-y-3 text-sm text-gray-500 dark:text-gray-300">
                     <p>
                       Guess the hidden word. Its length is a secret: it can be
-                      anywhere from {SHORTEST} to {LONGEST} letters, and your
+                      anywhere from {shortest} to {longest} letters, and your
                       guesses can be any English word up to {MAX_WORD_LENGTH}{" "}
                       letters long.
                     </p>

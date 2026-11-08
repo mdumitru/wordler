@@ -17,6 +17,8 @@ import {
   getRandomWord,
   getMaxGuesses,
   isSolution,
+  areWordsLoaded,
+  loadWords,
 } from "./lib/words";
 import { loadGame, SavedGame, saveGame } from "./lib/storage";
 import { getTheme, setTheme, Theme } from "./lib/theme";
@@ -38,7 +40,7 @@ const loadRestorableGame = (): SavedGame | null => {
   return saved && isSolution(saved.solution) ? saved : null;
 };
 
-function App() {
+function Game() {
   const [initialGame] = useState(loadRestorableGame);
   const isRestoredGameOver = Boolean(
     initialGame && (initialGame.isGameWon || initialGame.isAnswerRevealed),
@@ -330,6 +332,61 @@ function App() {
       >
         About this game
       </button>
+    </div>
+  );
+}
+
+type LoadState = "loading" | "ready" | "error";
+
+// Fetches the word lists, then starts the game.
+function App() {
+  const [loadState, setLoadState] = useState<LoadState>(() =>
+    areWordsLoaded() ? "ready" : "loading",
+  );
+
+  const load = useCallback(() => {
+    setLoadState("loading");
+    loadWords().then(
+      () => setLoadState("ready"),
+      (err) => {
+        console.error("Could not load the word lists", err);
+        setLoadState("error");
+      },
+    );
+  }, []);
+
+  useEffect(() => {
+    if (!areWordsLoaded()) {
+      load();
+    }
+  }, [load]);
+
+  if (loadState === "ready") {
+    return <Game />;
+  }
+  return (
+    <div className="h-screen flex flex-col items-center justify-center gap-4 px-4 text-center">
+      <div>
+        <Logo />
+      </div>
+      {loadState === "loading" ? (
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          Loading words…
+        </p>
+      ) : (
+        <>
+          <p role="alert" className="text-sm font-bold">
+            Could not load the word list. Check your connection and try again.
+          </p>
+          <button
+            type="button"
+            className="px-4 py-2 text-sm font-medium rounded text-white bg-wordle-correct hover:bg-wordle-night-correct dark:bg-wordle-night-correct dark:hover:bg-wordle-correct focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wordle-correct dark:focus:ring-offset-wordle-night-bg"
+            onClick={load}
+          >
+            Try again
+          </button>
+        </>
+      )}
     </div>
   );
 }
