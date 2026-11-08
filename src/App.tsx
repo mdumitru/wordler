@@ -16,7 +16,9 @@ import {
   getWordOfDay,
   getRandomWord,
   getMaxGuesses,
+  isSolution,
 } from "./lib/words";
+import { loadGame, SavedGame, saveGame } from "./lib/storage";
 import { getTheme, setTheme, Theme } from "./lib/theme";
 import { countLetters, getShareText } from "./lib/share";
 import {
@@ -30,22 +32,45 @@ const WIN_TOAST_MS = 2000;
 const ERROR_TOAST_MS = 2000;
 const SHARE_LABEL_MS = 2000;
 
+// The saved game, unless its word has since left the solution list.
+const loadRestorableGame = (): SavedGame | null => {
+  const saved = loadGame();
+  return saved && isSolution(saved.solution) ? saved : null;
+};
+
 function App() {
-  const [solution, setSolution] = useState(getWordOfDay);
-  const [guesses, setGuesses] = useState<string[]>([]);
+  const [initialGame] = useState(loadRestorableGame);
+  const isRestoredGameOver = Boolean(
+    initialGame && (initialGame.isGameWon || initialGame.isAnswerRevealed),
+  );
+  const [solution, setSolution] = useState(
+    () => initialGame?.solution ?? getWordOfDay(),
+  );
+  const [guesses, setGuesses] = useState<string[]>(
+    () => initialGame?.guesses ?? [],
+  );
   const [currentGuess, setCurrentGuess] = useState("");
-  const [isGameWon, setIsGameWon] = useState(false);
-  const [isAnswerRevealed, setIsAnswerRevealed] = useState(false);
+  const [isGameWon, setIsGameWon] = useState(
+    () => initialGame?.isGameWon ?? false,
+  );
+  const [isAnswerRevealed, setIsAnswerRevealed] = useState(
+    () => initialGame?.isAnswerRevealed ?? false,
+  );
+  // A finished game restored from storage shows its result without toasts.
+  const skipEndToastRef = useRef(isRestoredGameOver);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
   // The answer as it was when revealed, so a fading toast never shows the
   // next word after New word.
-  const [revealedAnswer, setRevealedAnswer] = useState("");
+  const [revealedAnswer, setRevealedAnswer] = useState(() =>
+    initialGame?.isAnswerRevealed ? initialGame.solution : "",
+  );
 
   const [theme, setThemeState] = useState<Theme>(getTheme);
   const [shareLabel, setShareLabel] = useState("Share");
   // Share and the answer toast wait until the board's final animations end.
-  const [isEndAnimationDone, setIsEndAnimationDone] = useState(false);
+  const [isEndAnimationDone, setIsEndAnimationDone] =
+    useState(isRestoredGameOver);
   const [endAnimationMs, setEndAnimationMs] = useState(0);
   // One toast at a time; a closing toast keeps its text while it fades out.
   const [toast, setToast] = useState({ message: "", isOpen: false });
@@ -66,6 +91,10 @@ function App() {
     setToast((t) => ({ ...t, isOpen: false }));
   }, []);
 
+  useEffect(() => {
+    saveGame({ solution, guesses, isGameWon, isAnswerRevealed });
+  }, [solution, guesses, isGameWon, isAnswerRevealed]);
+
   useEffect(
     () => () => {
       window.clearTimeout(toastTimerRef.current);
@@ -80,7 +109,7 @@ function App() {
 
   // Cheer as the winning row finishes flipping, while its tiles bounce.
   useEffect(() => {
-    if (!isGameWon) {
+    if (!isGameWon || skipEndToastRef.current) {
       return;
     }
     const winningGuess = guesses[guesses.length - 1];
@@ -94,7 +123,7 @@ function App() {
   }, [isGameWon]);
 
   // Guesses whose tile reveal has finished; the keyboard only colours these.
-  const [revealedCount, setRevealedCount] = useState(0);
+  const [revealedCount, setRevealedCount] = useState(guesses.length);
 
   useEffect(() => {
     if (guesses.length <= revealedCount) {
@@ -123,7 +152,7 @@ function App() {
   }, [isGameOver, endAnimationMs]);
 
   useEffect(() => {
-    if (isAnswerRevealed && isEndAnimationDone) {
+    if (isAnswerRevealed && isEndAnimationDone && !skipEndToastRef.current) {
       showToast(`The word was ${revealedAnswer}`, ANSWER_TOAST_MS);
     }
   }, [isAnswerRevealed, isEndAnimationDone, revealedAnswer, showToast]);
@@ -175,6 +204,7 @@ function App() {
   };
 
   const onNewWord = () => {
+    skipEndToastRef.current = false;
     hideToast();
     window.clearTimeout(shareTimerRef.current);
     setShareLabel("Share");

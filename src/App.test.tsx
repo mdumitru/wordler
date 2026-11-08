@@ -140,3 +140,46 @@ test("listeners are attached once, not on every render", () => {
   expect(add.mock.calls.filter(([type]) => type === "keydown").length).toBe(1);
   add.mockRestore();
 });
+
+test("refreshing mid-game restores the board without a toast", () => {
+  const { unmount } = render(<App />);
+  submit("COT");
+  type("CA");
+  unmount();
+  render(<App />);
+  expect(board().textContent).toBe("COT");
+  expect(screen.getByText("Give up")).toBeEnabled();
+});
+
+test("refreshing a finished game restores it with Share and no toast", () => {
+  const { unmount } = render(<App />);
+  submit("COT");
+  submit("CAT");
+  act(() => {
+    jest.runOnlyPendingTimers();
+  });
+  unmount();
+  render(<App />);
+  expect(board().textContent).toBe("COTCAT");
+  expect(screen.getByText("Give up")).toBeDisabled();
+  expect(screen.queryByText("Great!")).not.toBeInTheDocument();
+  act(() => {
+    jest.advanceTimersByTime(5000);
+  });
+  expect(screen.queryByText("Great!")).not.toBeInTheDocument();
+  expect(screen.getByText("Share")).toBeInTheDocument();
+});
+
+test("a saved word that left the solution list is discarded", () => {
+  window.localStorage.setItem(
+    "game",
+    JSON.stringify({
+      solution: "QWXZ",
+      guesses: ["COT"],
+      isGameWon: false,
+      isAnswerRevealed: false,
+    }),
+  );
+  render(<App />);
+  expect(board().textContent).toBe("");
+});
