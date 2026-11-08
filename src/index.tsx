@@ -3,6 +3,9 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import { initAnalytics } from './lib/analytics';
+
+initAnalytics();
 
 ReactDOM.render(
   <React.StrictMode>

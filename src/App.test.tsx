@@ -2,6 +2,8 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { readFileSync } from "fs";
 import { join } from "path";
 import App from "./App";
+import { trackEvent } from "./lib/analytics";
+import { getMaxGuesses } from "./lib/words";
 
 const wordFile = (name: string) =>
   readFileSync(join(__dirname, "../public/words", name), "utf8");
@@ -9,6 +11,11 @@ const WORD_FILES: Record<string, string> = {
   "/words/solutions.txt": wordFile("solutions.txt"),
   "/words/guesses.txt": wordFile("guesses.txt"),
 };
+
+jest.mock("./lib/analytics", () => ({ trackEvent: jest.fn() }));
+const trackEventMock = trackEvent as jest.MockedFunction<typeof trackEvent>;
+const eventsNamed = (name: string) =>
+  trackEventMock.mock.calls.filter(([n]) => n === name).map(([, data]) => data);
 
 jest.mock("./lib/words", () => ({
   ...jest.requireActual("./lib/words"),
@@ -73,6 +80,7 @@ const renderGame = async () => {
 beforeEach(() => {
   jest.useFakeTimers();
   window.localStorage.clear();
+  trackEventMock.mockClear();
   mockFetch();
 });
 
@@ -386,4 +394,79 @@ test("hard mode cannot be turned on mid-round", async () => {
   );
   submit("DOG");
   expect(board().textContent).toBe("COTDOG");
+});
+
+test("a won game reports its start and its end", async () => {
+  await renderGame();
+  submit("COT");
+  expect(eventsNamed("game_start")).toEqual([{ length: 3 }]);
+  expect(eventsNamed("game_end")).toEqual([]);
+  submit("CAT");
+  expect(eventsNamed("game_start")).toHaveLength(1);
+  expect(eventsNamed("game_end")).toEqual([
+    {
+      outcome: "won",
+      guesses: 2,
+      length: 3,
+      maxGuesses: getMaxGuesses("CAT"),
+      seconds: 0,
+      word: "CAT",
+    },
+  ]);
+});
+
+test("running out of guesses reports a loss", async () => {
+  await renderGame();
+  const max = getMaxGuesses("CAT");
+  for (let i = 0; i < max; i++) {
+    submit("COT");
+  }
+  expect(eventsNamed("game_end")).toEqual([
+    expect.objectContaining({ outcome: "lost", guesses: max }),
+  ]);
+});
+
+test("giving up and skipping are reported; an untouched board is not", async () => {
+  await renderGame();
+  mouseClick(screen.getByText("New word"));
+  expect(trackEventMock).not.toHaveBeenCalled();
+
+  submit("COT");
+  mouseClick(screen.getByText("Give up"));
+  expect(eventsNamed("game_end")).toEqual([
+    expect.objectContaining({ outcome: "gave_up", guesses: 1, word: "DOG" }),
+  ]);
+
+  trackEventMock.mockClear();
+  mouseClick(screen.getByText("New word"));
+  submit("COT");
+  submit("CAT");
+  mouseClick(screen.getByText("New word"));
+  expect(eventsNamed("game_end")).toEqual([
+    expect.objectContaining({ outcome: "skipped", guesses: 2 }),
+  ]);
+});
+
+test("game time caps idle gaps and survives a reload", async () => {
+  jest.setSystemTime(new Date("2026-01-01T00:00:00Z"));
+  const { unmount } = await renderGame();
+  act(() => {
+    jest.advanceTimersByTime(30_000);
+  });
+  type("C");
+  // A long pause counts as two minutes at most.
+  act(() => {
+    jest.advanceTimersByTime(60 * 60_000);
+  });
+  submit("OT");
+  unmount();
+
+  await renderGame();
+  act(() => {
+    jest.advanceTimersByTime(10_000);
+  });
+  submit("CAT");
+  expect(eventsNamed("game_end")).toEqual([
+    expect.objectContaining({ outcome: "won", seconds: 30 + 120 + 10 }),
+  ]);
 });

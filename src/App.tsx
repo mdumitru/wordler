@@ -28,6 +28,16 @@ import {
   MODES,
   saveMode,
 } from "./lib/mode";
+import { trackEvent } from "./lib/analytics";
+import {
+  GameTimer,
+  loadActiveMs,
+  pauseTimer,
+  recordAction,
+  resumeTimer,
+  saveActiveMs,
+  startTimer,
+} from "./lib/gameTimer";
 import { getTheme, setTheme, Theme, watchSystemTheme } from "./lib/theme";
 import { countLetters, getShareText, shareText } from "./lib/share";
 import {
@@ -47,6 +57,8 @@ const MODE_LABELS: Record<Mode, string> = {
   medium: "Medium",
   hard: "Hard",
 };
+
+type GameOutcome = "won" | "lost" | "gave_up" | "skipped";
 
 // The saved game, unless its word has since left the solution list.
 const loadRestorableGame = (): SavedGame | null => {
@@ -95,6 +107,14 @@ function Game() {
   const toastTimerRef = useRef<number>();
   const shareTimerRef = useRef<number>();
   const lengthToastTimerRef = useRef<number>();
+  // Active play time; an unfinished restored game continues its saved total.
+  const gameTimerRef = useRef<GameTimer>();
+  if (gameTimerRef.current === undefined) {
+    gameTimerRef.current = startTimer(
+      Date.now(),
+      initialGame && !isRestoredGameOver ? loadActiveMs(solution) : 0,
+    );
+  }
 
   const showToast = useCallback((message: string, ms: number) => {
     window.clearTimeout(toastTimerRef.current);
@@ -126,6 +146,51 @@ function Game() {
   const maxGuesses = getMaxGuesses(solution);
   const isGameOver = isGameWon || isAnswerRevealed;
   const lettersUsed = countLetters(guesses);
+
+  const updateGameTimer = (update: (timer: GameTimer) => GameTimer) => {
+    const timer = update(gameTimerRef.current ?? startTimer(Date.now()));
+    gameTimerRef.current = timer;
+    saveActiveMs(solution, timer.activeMs);
+    return timer;
+  };
+
+  // Each player action extends the active time of an unfinished game.
+  const notePlayerAction = () =>
+    updateGameTimer((timer) => recordAction(timer, Date.now()));
+
+  // Hidden-tab time never counts towards the game.
+  const isGameOverRef = useRef(isGameOver);
+  isGameOverRef.current = isGameOver;
+  const updateGameTimerRef = useRef(updateGameTimer);
+  updateGameTimerRef.current = updateGameTimer;
+  useEffect(() => {
+    const onVisibilityChange = () => {
+      if (isGameOverRef.current) {
+        return;
+      }
+      const now = Date.now();
+      updateGameTimerRef.current((timer) =>
+        document.visibilityState === "hidden"
+          ? pauseTimer(timer, now)
+          : resumeTimer(timer, now),
+      );
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () =>
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+  }, []);
+
+  const trackGameEnd = (outcome: GameOutcome, guessCount: number) => {
+    const { activeMs } = notePlayerAction();
+    trackEvent("game_end", {
+      outcome,
+      guesses: guessCount,
+      length: solution.length,
+      maxGuesses,
+      seconds: Math.round(activeMs / 1000),
+      word: solution,
+    });
+  };
 
   // Cheer as the winning row finishes flipping, while its tiles bounce.
   useEffect(() => {
@@ -181,6 +246,7 @@ function Game() {
     if (isGameOver) {
       return;
     }
+    notePlayerAction();
     setCurrentGuess((guess) =>
       guess.length < MAX_WORD_LENGTH ? `${guess}${value}` : guess,
     );
@@ -190,6 +256,7 @@ function Game() {
     if (isGameOver) {
       return;
     }
+    notePlayerAction();
     setCurrentGuess((guess) => guess.slice(0, -1));
   };
 
@@ -197,6 +264,7 @@ function Game() {
     if (isGameOver) {
       return;
     }
+    notePlayerAction();
 
     if (currentGuess.length < MIN_WORD_LENGTH) {
       return showToast("Not enough letters", ERROR_TOAST_MS);
@@ -216,13 +284,18 @@ function Game() {
     const guess = currentGuess;
     setCurrentGuess("");
     setGuesses((prev) => [...prev, guess]);
+    if (guesses.length === 0) {
+      trackEvent("game_start", { length: solution.length });
+    }
 
     if (guess === solution) {
+      trackGameEnd("won", guesses.length + 1);
       setEndAnimationMs(
         getRowRevealMs(guess.length) + getRowBounceMs(guess.length),
       );
       setIsGameWon(true);
     } else if (guesses.length + 1 >= maxGuesses) {
+      trackGameEnd("lost", guesses.length + 1);
       // Out of guesses: the answer toast follows the last row's reveal.
       setEndAnimationMs(getRowRevealMs(guess.length));
       setRevealedAnswer(solution);
@@ -261,12 +334,20 @@ function Game() {
   };
 
   const onNewWord = () => {
+    // Abandoning a game that has guesses counts as a skip; an untouched board
+    // was never started.
+    if (!isGameOver && guesses.length > 0) {
+      trackGameEnd("skipped", guesses.length);
+    }
+    const nextSolution = getRandomWord(solution);
+    gameTimerRef.current = startTimer(Date.now());
+    saveActiveMs(nextSolution, 0);
     skipEndToastRef.current = false;
     hideToast();
     window.clearTimeout(shareTimerRef.current);
     window.clearTimeout(lengthToastTimerRef.current);
     setShareLabel("Share");
-    setSolution(getRandomWord(solution));
+    setSolution(nextSolution);
     setGuesses([]);
     setCurrentGuess("");
     setIsGameWon(false);
@@ -274,6 +355,10 @@ function Game() {
   };
 
   const onGiveUp = () => {
+    if (isGameOver) {
+      return;
+    }
+    trackGameEnd("gave_up", guesses.length);
     window.clearTimeout(lengthToastTimerRef.current);
     setEndAnimationMs(0);
     setRevealedAnswer(solution);
@@ -288,6 +373,7 @@ function Game() {
   };
 
   const onShare = async () => {
+    trackEvent("share", { won: isGameWon, length: solution.length });
     const text = getShareText(guesses, solution, isGameWon);
     let label = "Share";
     try {
