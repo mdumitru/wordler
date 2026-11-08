@@ -6,11 +6,11 @@
 #   docker build -f deploy/Dockerfile -t wordler .
 #   docker run --rm -p 8080:8080 wordler
 
-ARG NODE_VERSION=20
-ARG NGINX_VERSION=1.27
+# Base images are pinned by digest for reproducible builds; the tag is kept
+# for readability. See deploy/README.md to refresh them.
 
 # --- build stage ------------------------------------------------------------
-FROM node:${NODE_VERSION}-alpine AS build
+FROM node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 AS build
 WORKDIR /app
 
 # Install dependencies first so this layer is cached until the lockfile changes.
@@ -27,9 +27,10 @@ RUN npm run build
 
 # --- runtime stage ----------------------------------------------------------
 # The unprivileged image runs nginx as a non-root user and listens on 8080.
-FROM nginxinc/nginx-unprivileged:${NGINX_VERSION}-alpine AS runtime
+FROM nginxinc/nginx-unprivileged:1.27-alpine@sha256:65e3e85dbaed8ba248841d9d58a899b6197106c23cb0ff1a132b7bfe0547e4c0 AS runtime
 
 COPY deploy/nginx.conf /etc/nginx/conf.d/default.conf
+COPY deploy/security-headers.conf /etc/nginx/snippets/security-headers.conf
 COPY --from=build /app/build /usr/share/nginx/html
 
 EXPOSE 8080
