@@ -174,9 +174,7 @@ function App() {
     }
   };
 
-  const onNewWord = (e: React.MouseEvent<HTMLButtonElement>) => {
-    // Drop focus so a later physical Enter key does not click this button again.
-    e.currentTarget.blur();
+  const onNewWord = () => {
     hideToast();
     window.clearTimeout(shareTimerRef.current);
     setShareLabel("Share");
@@ -187,26 +185,20 @@ function App() {
     setIsAnswerRevealed(false);
   };
 
-  const onGiveUp = (e: React.MouseEvent<HTMLButtonElement>) => {
-    // Drop focus so a later physical Enter key does not click this button again.
-    e.currentTarget.blur();
+  const onGiveUp = () => {
     setEndAnimationMs(0);
     setRevealedAnswer(solution);
     setIsAnswerRevealed(true);
     setCurrentGuess("");
   };
 
-  const onToggleTheme = (e: React.MouseEvent<HTMLButtonElement>) => {
-    // Drop focus so a later physical Enter key does not click this button again.
-    e.currentTarget.blur();
+  const onToggleTheme = () => {
     const next = theme === "dark" ? "light" : "dark";
     setTheme(next);
     setThemeState(next);
   };
 
-  const onShare = async (e: React.MouseEvent<HTMLButtonElement>) => {
-    // Drop focus so a later physical Enter key does not click this button again.
-    e.currentTarget.blur();
+  const onShare = async () => {
     const text = getShareText(guesses, solution, maxGuesses, isGameWon);
     try {
       await navigator.clipboard.writeText(text);
@@ -289,6 +281,7 @@ function App() {
           onEnter={onEnter}
           guesses={guesses.slice(0, revealedCount)}
           solution={solution}
+          isInputDisabled={isInfoModalOpen || isAboutModalOpen}
         />
       </div>
       <InfoModal

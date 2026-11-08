@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { KeyValue } from "../../lib/keyboard";
 import { getStatuses } from "../../lib/statuses";
 import { Key } from "./Key";
@@ -9,6 +9,28 @@ type Props = {
   onEnter: () => void;
   guesses: string[];
   solution: string;
+  // While a modal is open, physical keys must not reach the game.
+  isInputDisabled?: boolean;
+};
+
+const isTextField = (el: Element | null) =>
+  el instanceof HTMLElement &&
+  (el.isContentEditable ||
+    ["INPUT", "TEXTAREA", "SELECT"].includes(el.tagName));
+
+// A control the user reached with the keyboard keeps its own Enter
+// activation. One focused by a mouse click (or given focus back after a modal
+// closed by mouse) does not, so Enter still submits the guess.
+const isKeyboardFocusedControl = (el: Element | null) => {
+  if (!(el instanceof HTMLElement) || !el.matches("button, a[href]")) {
+    return false;
+  }
+  try {
+    return el.matches(":focus-visible");
+  } catch {
+    // Engines without :focus-visible support (e.g. jsdom).
+    return false;
+  }
 };
 
 export const Keyboard = ({
@@ -17,9 +39,9 @@ export const Keyboard = ({
   onEnter,
   guesses,
   solution,
+  isInputDisabled = false,
 }: Props) => {
   const charStatuses = getStatuses(guesses, solution);
-  console.log(charStatuses);
 
   const onClick = (value: KeyValue) => {
     if (value === "ENTER") {
@@ -31,27 +53,42 @@ export const Keyboard = ({
     return onChar(value);
   };
 
+  // The window listener is attached once and always calls the latest props.
+  const latestRef = useRef({ onChar, onDelete, onEnter, isInputDisabled });
+  latestRef.current = { onChar, onDelete, onEnter, isInputDisabled };
+
   useEffect(() => {
     const listener = (e: KeyboardEvent) => {
-      if (e.ctrlKey || e.metaKey || e.altKey) {
+      const latest = latestRef.current;
+      if (latest.isInputDisabled || e.ctrlKey || e.metaKey || e.altKey) {
         return;
       }
-      if (e.code === "Enter") {
-        onEnter();
-      } else if (e.code === "Backspace") {
-        onDelete();
+      const active = document.activeElement;
+      if (isTextField(active)) {
+        return;
+      }
+      if (e.code === "Enter" || e.code === "NumpadEnter" || e.key === "Enter") {
+        if (e.repeat || isKeyboardFocusedControl(active)) {
+          return;
+        }
+        // Keep a mouse-focused button from also activating.
+        e.preventDefault();
+        latest.onEnter();
+      } else if (e.code === "Backspace" || e.key === "Backspace") {
+        // Repeats are allowed so holding Backspace keeps deleting.
+        latest.onDelete();
       } else {
         const key = e.key.toUpperCase();
         if (key.length === 1 && key >= "A" && key <= "Z") {
-          onChar(key);
+          latest.onChar(key);
         }
       }
     };
-    window.addEventListener("keyup", listener);
+    window.addEventListener("keydown", listener);
     return () => {
-      window.removeEventListener("keyup", listener);
+      window.removeEventListener("keydown", listener);
     };
-  }, [onEnter, onDelete, onChar]);
+  }, []);
 
   return (
     <div>

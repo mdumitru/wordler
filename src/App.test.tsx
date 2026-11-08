@@ -88,3 +88,55 @@ test("guesses shorter than three letters are not enough", () => {
   press("Enter");
   expect(screen.getByText("Not enough letters")).toBeInTheDocument();
 });
+
+const keyDown = (init: KeyboardEventInit) =>
+  act(() => {
+    fireEvent.keyDown(window, init);
+  });
+
+test("holding Backspace keeps deleting", () => {
+  render(<App />);
+  type("COT");
+  keyDown({ key: "Backspace", code: "Backspace" });
+  keyDown({ key: "Backspace", code: "Backspace", repeat: true });
+  expect(board().textContent).toBe("C");
+});
+
+test("numpad Enter submits, a held Enter does not", () => {
+  render(<App />);
+  type("CAT");
+  keyDown({ key: "Enter", code: "Enter", repeat: true });
+  expect(screen.getByText("Give up")).toBeEnabled();
+  keyDown({ key: "Enter", code: "NumpadEnter" });
+  expect(screen.getByText("Give up")).toBeDisabled();
+});
+
+test("keys do nothing while a modal is open; Enter submits after it closes", () => {
+  render(<App />);
+  type("CA");
+  // A mouse click focuses the button in Chrome, then opens the modal.
+  screen.getByText("About this game").focus();
+  fireEvent.click(screen.getByText("About this game"));
+  type("T");
+  press("Enter");
+  expect(board().textContent).toBe("CA");
+  press("Escape");
+  for (let i = 0; i < 5; i++) {
+    act(() => {
+      jest.advanceTimersByTime(500);
+    });
+  }
+  expect(document.activeElement).toBe(screen.getByText("About this game"));
+  type("T");
+  press("Enter");
+  expect(screen.getByText("Give up")).toBeDisabled();
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+});
+
+test("listeners are attached once, not on every render", () => {
+  const add = jest.spyOn(window, "addEventListener");
+  render(<App />);
+  type("COT");
+  expect(add.mock.calls.filter(([type]) => type === "keydown").length).toBe(1);
+  add.mockRestore();
+});
