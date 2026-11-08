@@ -39,16 +39,14 @@ export const Cell = ({ value, status, revealDelayMs, size = "md" }: Props) => {
     : undefined;
 
   return (
-    <>
-      <div
-        className={classes}
-        style={style}
-        // A revealed tile reads as e.g. "C correct".
-        role={status ? "img" : undefined}
-        aria-label={status && value ? `${value} ${status}` : undefined}
-      >
-        {value}
-      </div>
-    </>
+    <div
+      className={classes}
+      style={style}
+      // A revealed tile reads as e.g. "C correct".
+      role={status ? "img" : undefined}
+      aria-label={status && value ? `${value} ${status}` : undefined}
+    >
+      {value}
+    </div>
   );
 };

@@ -54,19 +54,14 @@ export const AboutModal = ({ isOpen, handleClose }: Props) => {
                   </Dialog.Title>
                   <div className="mt-2">
                     <p className="text-sm text-gray-500 dark:text-gray-300">
-                      This is an open source clone of the game Wordle -{" "}
+                      Wordler is a fan-made variation on Wordle where the length
+                      of the hidden word is part of the puzzle. It is not
+                      affiliated with The New York Times.{" "}
                       <a
-                        href="https://github.com/hannahcode/wordle"
+                        href="https://www.nytimes.com/games/wordle/index.html"
                         className="underline font-bold"
                       >
-                        check out the code here
-                      </a>{" "}
-                      and{" "}
-                      <a
-                        href="https://www.powerlanguage.co.uk/wordle/"
-                        className="underline font-bold"
-                      >
-                        play the original here
+                        Play the original Wordle
                       </a>
                     </p>
                   </div>

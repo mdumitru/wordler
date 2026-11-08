@@ -1,7 +1,11 @@
 import { Fragment } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { Cell } from "../grid/Cell";
-import { MAX_WORD_LENGTH, MIN_GUESSES } from "../../constants/settings";
+import {
+  MAX_WORD_LENGTH,
+  MIN_GUESSES,
+  MIN_WORD_LENGTH,
+} from "../../constants/settings";
 import { getSolutionLengthRange } from "../../lib/words";
 
 const ordinal = (n: number) => {
@@ -65,9 +69,9 @@ export const InfoModal = ({ isOpen, handleClose }: Props) => {
                   <div className="mt-2 space-y-3 text-sm text-gray-500 dark:text-gray-300">
                     <p>
                       Guess the hidden word. Its length is a secret: it can be
-                      anywhere from {shortest} to {longest} letters, and your
-                      guesses can be any English word up to {MAX_WORD_LENGTH}{" "}
-                      letters long.
+                      anywhere from {shortest} to {longest} letters. Each guess
+                      must be a word from the game's word list,{" "}
+                      {MIN_WORD_LENGTH} to {MAX_WORD_LENGTH} letters long.
                     </p>
                     <p>
                       You get {MIN_GUESSES} tries, or one more try than the word

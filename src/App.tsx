@@ -21,7 +21,7 @@ import {
   loadWords,
 } from "./lib/words";
 import { loadGame, SavedGame, saveGame } from "./lib/storage";
-import { getTheme, setTheme, Theme } from "./lib/theme";
+import { getTheme, setTheme, Theme, watchSystemTheme } from "./lib/theme";
 import { countLetters, getShareText, shareText } from "./lib/share";
 import {
   getRowBounceMs,
@@ -69,6 +69,7 @@ function Game() {
   );
 
   const [theme, setThemeState] = useState<Theme>(getTheme);
+  useEffect(() => watchSystemTheme(setThemeState), []);
   const [shareLabel, setShareLabel] = useState("Share");
   // Share and the answer toast wait until the board's final animations end.
   const [isEndAnimationDone, setIsEndAnimationDone] =

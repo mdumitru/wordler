@@ -1,30 +1,52 @@
-# Wordle Clone
+# Wordler
 
-- Go play the real Wordle [here](https://www.powerlanguage.co.uk/wordle/)
-- Read the story behind it [here](https://www.nytimes.com/2022/01/03/technology/wordle-word-game-creator.html)
-- Try a demo of this clone project [here](https://61dc4dbf9f2b9d0007925c02--thirsty-hoover-08af60.netlify.app/)
+A word-guessing game in the style of Wordle, with one twist: the hidden word
+can be anywhere from 3 to 18 letters long, and its length is part of the
+puzzle.
 
-_Inspiration:_
-This game is an open source clone of the immensely popular online word guessing game Wordle. Like many others all over the world, I saw the signature pattern of green, yellow, and white squares popping up all over social media and the web and had to check it out. After a few days of play, I decided it would be great for my learning to try to rebuild Wordle in React!
+## How it differs from Wordle
 
-_Design Decisions:_
-I used a combination of React, Typescript, and Tailwind to build this Wordle Clone. When examining the original Wordle, I assumed the list might come from an external API or database, but after investigating in chrome dev tools I found that the list of words is simply stored in an array on the front end. I'm using the same list as the OG Wordle uses, but watch out for spoilers if you go find the file in this repo! The word match functionality is simple: the word array index increments each day from a fixed game epoch timestamp (only one puzzle per day!) roughly like so:
+- **Secret length.** Guesses can be 3–20 letters and must be in the word list.
+  Each letter is coloured against the same position of the hidden word,
+  counting from the left, so an all-green short guess may just be a prefix.
+- **More tries for long words.** You get 6 tries, or one more than the word's
+  length if that is larger. The board grows a row at a time, so a 7th row
+  tells you the word has at least 6 letters.
+- **Letters used.** Every guessed letter counts towards a secondary score.
+  Fewer tries is good; fewer letters is a bonus.
+- **Unlimited play.** The first game each day uses the daily word; **New
+  word** starts a random one and **Give up** reveals the answer. Progress is
+  kept in the browser across reloads.
+- **Spoiler-free sharing.** **Share** copies (or, on mobile, shares) the emoji
+  grid with the try count and letters used. The guess limit is left out
+  because it would give away the length.
 
+## Development
+
+Requires Node.js 18 or newer.
+
+```sh
+npm install   # install dependencies
+npm start     # dev server on http://localhost:3000
+npm test      # run the tests in watch mode
+npm run build # production build in build/
 ```
-WORDS[Math.floor((NOW_IN_MS - GAME_EPOCH_IN_MS) / ONE_DAY_IN_MS)]
+
+The word lists live in `public/words/` (`solutions.txt` and `guesses.txt`, one
+lowercase word per line) and are fetched at startup. `filter.py` filters a
+source list by word frequency (`wordfreq` package):
+
+```sh
+python3 filter.py <input.txt> <output.txt> <min-zipf-frequency>
 ```
 
-React enabled me to componentize the littlest parts of the game - keys and letter cells - and use them as the building blocks for the keyboard, word grid, and winning solution graphic. As for handling state, I used the built in useState and useEffect hooks to track guesses, whether the game is won, and to conditionally render popups.
+## Deployment
 
-In addition to other things, Typescript helped ensure type safety for the statuses of each guessed letter, which were used in many areas of the app and needed to be accurate for the game to work correctly.
+`deploy/` contains a Dockerfile that builds the app and serves it with nginx.
+See [deploy/README.md](deploy/README.md).
 
-I implemented Tailwind mostly because I wanted to learn how to use Tailwind CSS, but I also took advantage of [Tailwind UI](https://tailwindui.com/) with their [headless package](https://headlessui.dev/) to build the modals and notifications. This was such an easy way to build simple popups for how to play, winning the game, and invalid words.
+## Credits
 
-_To Run Locally:_
-Clone the repository and perform the following command line actions:
-
-- npm init
-- npm run start
-
-### I'm looking for a junior developer role
-Please feel free to contact me on [linkedin](https://www.linkedin.com/in/hannahpark1000/) and learn more about me [here](https://www.hannahmariepark.com/)
+Based on an open-source React clone of
+[Wordle](https://www.nytimes.com/games/wordle/index.html). Not affiliated with
+The New York Times. Licensed under the terms in [LICENSE](LICENSE).

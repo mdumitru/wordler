@@ -69,6 +69,14 @@ afterEach(() => {
   jest.useRealTimers();
 });
 
+test("renders the board and the letter count once the words load", async () => {
+  render(<App />);
+  expect(await screen.findByTestId("board")).toBeInTheDocument();
+  expect(screen.getByText(/Letters used/)).toHaveTextContent("Letters used: 0");
+  submit("COT");
+  expect(screen.getByText(/Letters used/)).toHaveTextContent("Letters used: 3");
+});
+
 test("typing after a win changes nothing and the input row is gone", async () => {
   await renderGame();
   submit("CAT");
