@@ -22,7 +22,7 @@ import {
 } from "./lib/words";
 import { loadGame, SavedGame, saveGame } from "./lib/storage";
 import { getTheme, setTheme, Theme } from "./lib/theme";
-import { countLetters, getShareText } from "./lib/share";
+import { countLetters, getShareText, shareText } from "./lib/share";
 import {
   getRowBounceMs,
   getRowRevealMs,
@@ -231,14 +231,21 @@ function Game() {
   };
 
   const onShare = async () => {
-    const text = getShareText(guesses, solution, maxGuesses, isGameWon);
+    const text = getShareText(guesses, solution, isGameWon);
+    let label = "Share";
     try {
-      await navigator.clipboard.writeText(text);
-      setShareLabel("Copied!");
+      const outcome = await shareText(text);
+      label =
+        outcome === "copied"
+          ? "Copied!"
+          : outcome === "shared"
+            ? "Shared!"
+            : "Share";
     } catch (err) {
       console.error("Could not copy share text", err);
-      setShareLabel("Copy failed");
+      label = "Copy failed";
     }
+    setShareLabel(label);
     window.clearTimeout(shareTimerRef.current);
     shareTimerRef.current = window.setTimeout(
       () => setShareLabel("Share"),
