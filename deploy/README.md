@@ -18,6 +18,112 @@ plugin): the Dockerfile uses a cache mount and `deploy/Dockerfile.dockerignore`.
   `/words/` for an hour; `index.html` is always revalidated, so a redeploy is
   picked up on the next page load.
 
+## Production stack with analytics
+
+`deploy/compose.yaml` runs the game behind Caddy (automatic HTTPS) together
+with self-hosted [Umami](https://umami.is) analytics and its Postgres
+database. Only Caddy is published (ports 80/443); the Umami dashboard listens
+on `127.0.0.1:3000` of the host.
+
+Caddy serves three analytics routes on the game's own origin, so the
+Content-Security-Policy stays `'self'`-only:
+
+- `/stats/config.json` gives the app the Umami website id (empty = analytics
+  off; the app then never loads the tracker).
+- `/stats/script.js` and `/stats/api/send` are the Umami tracker and its
+  collection endpoint. Every other Umami path stays private.
+
+Umami counts visitors without cookies, so no consent banner is needed. A
+"unique visitor" is unique per day; ad blockers hide some visits.
+
+### First start
+
+```sh
+cd deploy
+cp .env.example .env     # set SITE_ADDRESS, and both secrets with: openssl rand -hex 32
+docker compose up -d --build
+```
+
+Point the domain's DNS at the server first; Caddy fetches the certificate on
+start. For a local trial, set `SITE_ADDRESS=:80` and open <http://localhost>.
+
+Then create the website in Umami:
+
+1. Open the dashboard: `ssh -L 3000:127.0.0.1:3000 <server>`, then
+   <http://localhost:3000>.
+2. Log in as `admin` / `umami` and **change that password immediately**.
+3. Settings → Websites → Add website (any name, the public domain). Copy its
+   website id into `UMAMI_WEBSITE_ID` in `.env`.
+4. `docker compose up -d caddy` to apply it. Visits show up in the dashboard
+   within seconds.
+
+Redeploy the game after code changes with `docker compose up -d --build
+wordle`.
+
+### What the game reports
+
+Besides page views (visits, visitors, time on site, referrers, countries,
+devices), the app sends these events:
+
+| Event | When | Data |
+|---|---|---|
+| `game_start` | first valid guess of a game | `length` |
+| `game_end` | win, loss, give up, or New word after at least one guess | `outcome` (`won`, `lost`, `gave_up`, `skipped`), `guesses`, `length`, `maxGuesses`, `seconds`, `word` |
+| `share` | Share pressed | `won`, `length` |
+
+`seconds` is active play time: gaps between key presses count up to two
+minutes each and time in a hidden tab never counts. It survives a reload.
+Games abandoned by closing the tab have a `game_start` but no `game_end`.
+
+### Queries
+
+The dashboard's Events view breaks events down by their data. For medians and
+distributions, query Postgres directly:
+
+```sh
+docker compose exec db psql -U umami umami
+```
+
+```sql
+-- One row per finished game, with its data as columns.
+CREATE OR REPLACE VIEW games AS
+SELECT e.created_at,
+       e.session_id,
+       max(d.string_value) FILTER (WHERE d.data_key = 'outcome') AS outcome,
+       max(d.string_value) FILTER (WHERE d.data_key = 'word')    AS word,
+       max(d.number_value) FILTER (WHERE d.data_key = 'guesses') AS guesses,
+       max(d.number_value) FILTER (WHERE d.data_key = 'length')  AS length,
+       max(d.number_value) FILTER (WHERE d.data_key = 'seconds') AS seconds
+FROM website_event e
+JOIN event_data d ON d.website_event_id = e.event_id
+WHERE e.event_name = 'game_end'
+GROUP BY e.event_id, e.created_at, e.session_id;
+
+-- Outcomes, and guesses and time for won games.
+SELECT outcome, count(*),
+       percentile_cont(0.5) WITHIN GROUP (ORDER BY guesses) AS median_guesses,
+       round(avg(guesses), 2)                               AS avg_guesses,
+       percentile_cont(0.5) WITHIN GROUP (ORDER BY seconds) AS median_seconds
+FROM games GROUP BY outcome;
+
+-- Guess distribution of won games.
+SELECT guesses, count(*) FROM games WHERE outcome = 'won'
+GROUP BY guesses ORDER BY guesses;
+
+-- Hardest words (at least 5 finished games).
+SELECT word, count(*) AS games,
+       round(avg((outcome = 'won')::int), 2) AS win_rate
+FROM games GROUP BY word HAVING count(*) >= 5 ORDER BY win_rate LIMIT 20;
+```
+
+### Backups
+
+All statistics live in the `umami-db` volume:
+
+```sh
+docker compose exec -T db pg_dump -U umami umami | gzip > umami-$(date +%F).sql.gz
+```
+
 ## Security headers
 
 `deploy/security-headers.conf` is installed as
@@ -46,8 +152,8 @@ A stale hash shows up as a CSP violation in the browser console and a flash
 of the light theme on load.
 
 HSTS (`Strict-Transport-Security`) is not set here: the container speaks plain
-HTTP. Set it on the TLS terminator (load balancer, ingress or reverse proxy) in
-front of it.
+HTTP. Set it on the TLS terminator in front of it; the Caddy front in
+`compose.yaml` does.
 
 ## Base images
 
