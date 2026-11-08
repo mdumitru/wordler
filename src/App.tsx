@@ -3,14 +3,14 @@ import {
   MoonIcon,
   SunIcon,
 } from "@heroicons/react/outline";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert } from "./components/alerts/Alert";
 import { Grid } from "./components/grid/Grid";
 import { Keyboard } from "./components/keyboard/Keyboard";
 import { Logo } from "./components/logo/Logo";
 import { AboutModal } from "./components/modals/AboutModal";
 import { InfoModal } from "./components/modals/InfoModal";
-import { MAX_WORD_LENGTH } from "./constants/settings";
+import { MAX_WORD_LENGTH, MIN_WORD_LENGTH } from "./constants/settings";
 import {
   isWordInWordList,
   getWordOfDay,
@@ -27,6 +27,8 @@ import {
 
 const ANSWER_TOAST_MS = 5000;
 const WIN_TOAST_MS = 2000;
+const ERROR_TOAST_MS = 2000;
+const SHARE_LABEL_MS = 2000;
 
 function App() {
   const [solution, setSolution] = useState(getWordOfDay);
@@ -36,16 +38,41 @@ function App() {
   const [isAnswerRevealed, setIsAnswerRevealed] = useState(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
-  const [isWordNotFoundAlertOpen, setIsWordNotFoundAlertOpen] = useState(false);
-  const [isNotEnoughLetters, setIsNotEnoughLetters] = useState(false);
+  // The answer as it was when revealed, so a fading toast never shows the
+  // next word after New word.
+  const [revealedAnswer, setRevealedAnswer] = useState("");
 
   const [theme, setThemeState] = useState<Theme>(getTheme);
   const [shareLabel, setShareLabel] = useState("Share");
   // Share and the answer toast wait until the board's final animations end.
   const [isEndAnimationDone, setIsEndAnimationDone] = useState(false);
   const [endAnimationMs, setEndAnimationMs] = useState(0);
-  const [isAnswerToastOpen, setIsAnswerToastOpen] = useState(false);
-  const [isWinToastOpen, setIsWinToastOpen] = useState(false);
+  // One toast at a time; a closing toast keeps its text while it fades out.
+  const [toast, setToast] = useState({ message: "", isOpen: false });
+  const toastTimerRef = useRef<number>();
+  const shareTimerRef = useRef<number>();
+
+  const showToast = useCallback((message: string, ms: number) => {
+    window.clearTimeout(toastTimerRef.current);
+    setToast({ message, isOpen: true });
+    toastTimerRef.current = window.setTimeout(
+      () => setToast((t) => ({ ...t, isOpen: false })),
+      ms,
+    );
+  }, []);
+
+  const hideToast = useCallback(() => {
+    window.clearTimeout(toastTimerRef.current);
+    setToast((t) => ({ ...t, isOpen: false }));
+  }, []);
+
+  useEffect(
+    () => () => {
+      window.clearTimeout(toastTimerRef.current);
+      window.clearTimeout(shareTimerRef.current);
+    },
+    [],
+  );
 
   const maxGuesses = getMaxGuesses(solution);
   const isGameOver = isGameWon || isAnswerRevealed;
@@ -54,22 +81,14 @@ function App() {
   // Cheer as the winning row finishes flipping, while its tiles bounce.
   useEffect(() => {
     if (!isGameWon) {
-      setIsWinToastOpen(false);
       return;
     }
     const winningGuess = guesses[guesses.length - 1];
     const revealMs = prefersReducedMotion()
       ? 0
       : getRowRevealMs(winningGuess.length);
-    const openTimer = setTimeout(() => setIsWinToastOpen(true), revealMs);
-    const closeTimer = setTimeout(
-      () => setIsWinToastOpen(false),
-      revealMs + WIN_TOAST_MS,
-    );
-    return () => {
-      clearTimeout(openTimer);
-      clearTimeout(closeTimer);
-    };
+    const timer = setTimeout(() => showToast("Great!", WIN_TOAST_MS), revealMs);
+    return () => clearTimeout(timer);
     // Only (re)schedule when the game is won, not on later guess changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isGameWon]);
@@ -104,73 +123,63 @@ function App() {
   }, [isGameOver, endAnimationMs]);
 
   useEffect(() => {
-    if (!isAnswerRevealed || !isEndAnimationDone) {
-      setIsAnswerToastOpen(false);
-      return;
+    if (isAnswerRevealed && isEndAnimationDone) {
+      showToast(`The word was ${revealedAnswer}`, ANSWER_TOAST_MS);
     }
-    setIsAnswerToastOpen(true);
-    const timer = setTimeout(
-      () => setIsAnswerToastOpen(false),
-      ANSWER_TOAST_MS,
-    );
-    return () => clearTimeout(timer);
-  }, [isAnswerRevealed, isEndAnimationDone]);
+  }, [isAnswerRevealed, isEndAnimationDone, revealedAnswer, showToast]);
 
   const onChar = (value: string) => {
-    if (!isAnswerRevealed && currentGuess.length < MAX_WORD_LENGTH) {
-      setCurrentGuess(`${currentGuess}${value}`);
+    if (isGameOver) {
+      return;
     }
+    setCurrentGuess((guess) =>
+      guess.length < MAX_WORD_LENGTH ? `${guess}${value}` : guess,
+    );
   };
 
   const onDelete = () => {
-    setCurrentGuess(currentGuess.slice(0, -1));
+    if (isGameOver) {
+      return;
+    }
+    setCurrentGuess((guess) => guess.slice(0, -1));
   };
 
   const onEnter = () => {
-    if (isAnswerRevealed) {
+    if (isGameOver) {
       return;
     }
 
-    if (currentGuess.length === 0) {
-      setIsNotEnoughLetters(true);
-      return setTimeout(() => {
-        setIsNotEnoughLetters(false);
-      }, 2000);
+    if (currentGuess.length < MIN_WORD_LENGTH) {
+      return showToast("Not enough letters", ERROR_TOAST_MS);
     }
 
     if (!isWordInWordList(currentGuess)) {
-      setIsWordNotFoundAlertOpen(true);
-      return setTimeout(() => {
-        setIsWordNotFoundAlertOpen(false);
-      }, 2000);
+      return showToast("Word not found", ERROR_TOAST_MS);
     }
 
-    const winningWord = currentGuess === solution;
+    const guess = currentGuess;
+    setCurrentGuess("");
+    setGuesses((prev) => [...prev, guess]);
 
-    if (!isGameWon) {
-      setCurrentGuess("");
-
-      if (winningWord) {
-        setEndAnimationMs(
-          getRowRevealMs(currentGuess.length) +
-            getRowBounceMs(currentGuess.length),
-        );
-        setGuesses([...guesses, currentGuess]);
-        setIsGameWon(true);
-      } else if (guesses.length + 1 >= maxGuesses) {
-        // Out of guesses: the answer toast follows the last row's reveal.
-        setEndAnimationMs(getRowRevealMs(currentGuess.length));
-        setGuesses([...guesses, currentGuess]);
-        setIsAnswerRevealed(true);
-      } else {
-        setGuesses([...guesses, currentGuess]);
-      }
+    if (guess === solution) {
+      setEndAnimationMs(
+        getRowRevealMs(guess.length) + getRowBounceMs(guess.length),
+      );
+      setIsGameWon(true);
+    } else if (guesses.length + 1 >= maxGuesses) {
+      // Out of guesses: the answer toast follows the last row's reveal.
+      setEndAnimationMs(getRowRevealMs(guess.length));
+      setRevealedAnswer(solution);
+      setIsAnswerRevealed(true);
     }
   };
 
   const onNewWord = (e: React.MouseEvent<HTMLButtonElement>) => {
     // Drop focus so a later physical Enter key does not click this button again.
     e.currentTarget.blur();
+    hideToast();
+    window.clearTimeout(shareTimerRef.current);
+    setShareLabel("Share");
     setSolution(getRandomWord(solution));
     setGuesses([]);
     setCurrentGuess("");
@@ -182,6 +191,7 @@ function App() {
     // Drop focus so a later physical Enter key does not click this button again.
     e.currentTarget.blur();
     setEndAnimationMs(0);
+    setRevealedAnswer(solution);
     setIsAnswerRevealed(true);
     setCurrentGuess("");
   };
@@ -205,15 +215,16 @@ function App() {
       console.error("Could not copy share text", err);
       setShareLabel("Copy failed");
     }
-    setTimeout(() => setShareLabel("Share"), 2000);
+    window.clearTimeout(shareTimerRef.current);
+    shareTimerRef.current = window.setTimeout(
+      () => setShareLabel("Share"),
+      SHARE_LABEL_MS,
+    );
   };
 
   return (
     <div className="h-screen flex flex-col py-8 max-w-7xl mx-auto sm:px-6 lg:px-8">
-      <Alert message="Not enough letters" isOpen={isNotEnoughLetters} />
-      <Alert message="Word not found" isOpen={isWordNotFoundAlertOpen} />
-      <Alert message={`The word was ${solution}`} isOpen={isAnswerToastOpen} />
-      <Alert message="Great!" isOpen={isWinToastOpen} />
+      <Alert message={toast.message} isOpen={toast.isOpen} />
       <div className="flex w-full max-w-[28rem] mx-auto items-center mb-4">
         <Logo />
         <button
@@ -259,6 +270,7 @@ function App() {
         solution={solution}
         maxGuesses={maxGuesses}
         isGameWon={isGameWon}
+        isGameOver={isGameOver}
       />
       {isEndAnimationDone && (
         <button

@@ -10,6 +10,7 @@ type Props = {
   solution: string;
   maxGuesses: number;
   isGameWon: boolean;
+  isGameOver: boolean;
 };
 
 export const Grid = ({
@@ -18,12 +19,13 @@ export const Grid = ({
   solution,
   maxGuesses,
   isGameWon,
+  isGameOver,
 }: Props) => {
-  const hasGuessesLeft = guesses.length < maxGuesses;
+  const showCurrentRow = !isGameOver && guesses.length < maxGuesses;
   // The board always starts 6 rows tall; longer words with extra guesses
   // grow it one row at a time as those guesses are used.
   const empties = Array.from(
-    Array(Math.max(0, MIN_GUESSES - 1 - guesses.length)),
+    Array(Math.max(0, MIN_GUESSES - guesses.length - (showCurrentRow ? 1 : 0))),
   );
   const scrollRef = useRef<HTMLDivElement>(null);
   // Only rows added since the last render play the reveal animation.
@@ -56,7 +58,7 @@ export const Grid = ({
         // Top padding leaves room for winning tiles to bounce without clipping.
         className="board-scroll relative min-h-0 overflow-auto pt-6"
       >
-        <div ref={rowsRef} className="w-max mx-auto">
+        <div ref={rowsRef} data-testid="board" className="w-max mx-auto">
           {guesses.map((guess, i) => (
             <CompletedRow
               key={i}
@@ -66,7 +68,7 @@ export const Grid = ({
               isWinningRow={isGameWon && i === guesses.length - 1}
             />
           ))}
-          {hasGuessesLeft && <CurrentRow guess={currentGuess} />}
+          {showCurrentRow && <CurrentRow guess={currentGuess} />}
           {empties.map((_, i) => (
             <EmptyRow key={i} />
           ))}
