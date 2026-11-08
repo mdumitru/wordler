@@ -261,14 +261,14 @@ function Game() {
         <Logo />
         <button
           type="button"
-          className="shrink-0 whitespace-nowrap mr-1 sm:mr-2 px-1.5 sm:px-2.5 py-1.5 text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 dark:text-indigo-100 dark:bg-indigo-900 dark:hover:bg-indigo-800 dark:focus:ring-offset-wordle-night-bg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          className="shrink-0 whitespace-nowrap mr-1 sm:mr-2 px-1.5 sm:px-2.5 py-1.5 text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 dark:text-indigo-100 dark:bg-indigo-900 dark:hover:bg-indigo-800 dark:focus-visible:ring-offset-wordle-night-bg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500"
           onClick={onNewWord}
         >
           New word
         </button>
         <button
           type="button"
-          className="shrink-0 whitespace-nowrap mr-1 sm:mr-2 px-1.5 sm:px-2.5 py-1.5 text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 dark:text-indigo-100 dark:bg-indigo-900 dark:hover:bg-indigo-800 dark:focus:ring-offset-wordle-night-bg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="shrink-0 whitespace-nowrap mr-1 sm:mr-2 px-1.5 sm:px-2.5 py-1.5 text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 dark:text-indigo-100 dark:bg-indigo-900 dark:hover:bg-indigo-800 dark:focus-visible:ring-offset-wordle-night-bg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={onGiveUp}
           disabled={isGameWon || isAnswerRevealed}
         >
@@ -311,7 +311,7 @@ function Game() {
       {/* Always rendered so the board and keyboard do not jump when it appears. */}
       <button
         type="button"
-        className={`${isEndAnimationDone ? "" : "invisible "}shrink-0 mx-auto px-4 py-2 text-sm font-medium rounded text-white bg-wordle-correct hover:bg-wordle-night-correct dark:bg-wordle-night-correct dark:hover:bg-wordle-correct focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wordle-correct dark:focus:ring-offset-wordle-night-bg`}
+        className={`${isEndAnimationDone ? "" : "invisible "}shrink-0 mx-auto px-4 py-2 text-sm font-medium rounded text-white bg-wordle-correct hover:bg-wordle-night-correct dark:bg-wordle-night-correct dark:hover:bg-wordle-correct focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-wordle-correct dark:focus-visible:ring-offset-wordle-night-bg`}
         onClick={onShare}
         disabled={!isEndAnimationDone}
       >
@@ -339,7 +339,7 @@ function Game() {
 
       <button
         type="button"
-        className="shrink-0 mx-auto mt-4 sm:mt-8 flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 dark:text-indigo-100 dark:bg-indigo-900 dark:hover:bg-indigo-800 dark:focus:ring-offset-wordle-night-bg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+        className="shrink-0 mx-auto mt-4 sm:mt-8 flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 dark:text-indigo-100 dark:bg-indigo-900 dark:hover:bg-indigo-800 dark:focus-visible:ring-offset-wordle-night-bg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500"
         onClick={() => setIsAboutModalOpen(true)}
       >
         About this game
@@ -392,7 +392,7 @@ function App() {
           </p>
           <button
             type="button"
-            className="px-4 py-2 text-sm font-medium rounded text-white bg-wordle-correct hover:bg-wordle-night-correct dark:bg-wordle-night-correct dark:hover:bg-wordle-correct focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wordle-correct dark:focus:ring-offset-wordle-night-bg"
+            className="px-4 py-2 text-sm font-medium rounded text-white bg-wordle-correct hover:bg-wordle-night-correct dark:bg-wordle-night-correct dark:hover:bg-wordle-correct focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-wordle-correct dark:focus-visible:ring-offset-wordle-night-bg"
             onClick={load}
           >
             Try again

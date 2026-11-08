@@ -16,11 +16,25 @@ jest.mock("./lib/words", () => ({
   getRandomWord: () => "DOG",
 }));
 
+// Like a browser, keys go to the focused element and bubble to window.
+const target = () => document.activeElement ?? document.body;
+
+// A mouse click: pointer down, focus moves to the element, then click.
+const mouseClick = (el: Element) =>
+  act(() => {
+    fireEvent.mouseDown(el);
+    if (el instanceof HTMLElement) {
+      el.focus();
+    }
+    fireEvent.mouseUp(el);
+    fireEvent.click(el);
+  });
+
 const press = (key: string) => {
   const code = key === "Enter" || key === "Backspace" ? key : `Key${key}`;
   act(() => {
-    fireEvent.keyDown(window, { key, code });
-    fireEvent.keyUp(window, { key, code });
+    fireEvent.keyDown(target(), { key, code });
+    fireEvent.keyUp(target(), { key, code });
   });
 };
 
@@ -152,7 +166,7 @@ test("tiles, rows and keys have accessible names", async () => {
 
 const keyDown = (init: KeyboardEventInit) =>
   act(() => {
-    fireEvent.keyDown(window, init);
+    fireEvent.keyDown(target(), init);
   });
 
 test("holding Backspace keeps deleting", async () => {
@@ -172,26 +186,49 @@ test("numpad Enter submits, a held Enter does not", async () => {
   expect(screen.getByText("Give up")).toBeDisabled();
 });
 
-test("keys do nothing while a modal is open; Enter submits after it closes", async () => {
-  await renderGame();
-  type("CA");
-  // A mouse click focuses the button in Chrome, then opens the modal.
-  screen.getByText("About this game").focus();
-  fireEvent.click(screen.getByText("About this game"));
-  type("T");
-  press("Enter");
-  expect(board().textContent).toBe("CA");
-  press("Escape");
+const waitForModalTransition = () => {
   for (let i = 0; i < 5; i++) {
     act(() => {
       jest.advanceTimersByTime(500);
     });
   }
+};
+
+test("keys do nothing while a modal is open; Enter submits after a mouse close", async () => {
+  await renderGame();
+  type("CA");
+  mouseClick(screen.getByText("About this game"));
+  type("T");
+  press("Enter");
+  expect(board().textContent).toBe("CA");
+  mouseClick(document.querySelector('[id^="headlessui-dialog-overlay"]')!);
+  waitForModalTransition();
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   expect(document.activeElement).toBe(screen.getByText("About this game"));
   type("T");
   press("Enter");
   expect(screen.getByText("Give up")).toBeDisabled();
-  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+});
+
+test("Enter on a button reached with the keyboard is left to the button", async () => {
+  await renderGame();
+  type("CAT");
+  mouseClick(screen.getByText("About this game"));
+  press("Escape");
+  waitForModalTransition();
+  // Focus came back after a keyboard close, so Enter belongs to the button.
+  expect(document.activeElement).toBe(screen.getByText("About this game"));
+  press("Enter");
+  expect(screen.getByText("Give up")).toBeEnabled();
+});
+
+test("Enter submits after clicking a button and typing", async () => {
+  await renderGame();
+  mouseClick(screen.getByText("New word"));
+  expect(document.activeElement).toBe(screen.getByText("New word"));
+  submit("CAT");
+  expect(board().textContent).toBe("CAT");
+  expect(screen.getByText(/Letters used/)).toHaveTextContent("Letters used: 3");
 });
 
 test("listeners are attached once, not on every render", async () => {

@@ -18,20 +18,19 @@ const isTextField = (el: Element | null) =>
   (el.isContentEditable ||
     ["INPUT", "TEXTAREA", "SELECT"].includes(el.tagName));
 
-// A control the user reached with the keyboard keeps its own Enter
-// activation. One focused by a mouse click (or given focus back after a modal
-// closed by mouse) does not, so Enter still submits the guess.
-const isKeyboardFocusedControl = (el: Element | null) => {
-  if (!(el instanceof HTMLElement) || !el.matches("button, a[href]")) {
-    return false;
-  }
-  try {
-    return el.matches(":focus-visible");
-  } catch {
-    // Engines without :focus-visible support (e.g. jsdom).
-    return false;
-  }
-};
+const isControl = (el: Element | null) =>
+  el instanceof HTMLElement && el.matches("button, a[href]");
+
+// Keys that move focus around the page. Typing letters does not count, so a
+// button clicked with the mouse stays "mouse-focused" while the player types.
+const NAVIGATION_KEYS = new Set([
+  "Tab",
+  "Escape",
+  "ArrowUp",
+  "ArrowDown",
+  "ArrowLeft",
+  "ArrowRight",
+]);
 
 export const Keyboard = ({
   onChar,
@@ -55,7 +54,54 @@ export const Keyboard = ({
 
   // The window listener is attached once and always calls the latest props.
   const latestRef = useRef({ onChar, onDelete, onEnter, isInputDisabled });
+  const focusedByKeyboardRef = useRef<() => boolean>(() => false);
   latestRef.current = { onChar, onDelete, onEnter, isInputDisabled };
+
+  // A control the player reached with the keyboard keeps its own Enter
+  // activation. One focused by a click or tap (or given focus back after a
+  // modal was closed with the mouse) does not, so Enter still submits the
+  // guess. Chrome's :focus-visible cannot tell these apart: it turns on for a
+  // clicked button as soon as any key is typed.
+  useEffect(() => {
+    let lastInput: "pointer" | "keyboard" = "pointer";
+    let focusedByKeyboard = false;
+    const onPointerDown = () => {
+      lastInput = "pointer";
+    };
+    const onNavigationKey = (e: KeyboardEvent) => {
+      if (NAVIGATION_KEYS.has(e.key)) {
+        lastInput = "keyboard";
+      }
+    };
+    // Mouse-focused controls are marked so index.css can hide the focus
+    // ring Chrome would otherwise show once the player starts typing.
+    const onFocusIn = (e: FocusEvent) => {
+      focusedByKeyboard = lastInput === "keyboard";
+      if (e.target instanceof HTMLElement) {
+        e.target.toggleAttribute("data-mouse-focus", !focusedByKeyboard);
+      }
+    };
+    const onFocusOut = (e: FocusEvent) => {
+      if (e.target instanceof HTMLElement) {
+        e.target.removeAttribute("data-mouse-focus");
+      }
+    };
+    focusedByKeyboardRef.current = () => focusedByKeyboard;
+    // Capture phase, so this runs before focus moves and before any handler
+    // that might stop the event.
+    document.addEventListener("pointerdown", onPointerDown, true);
+    document.addEventListener("mousedown", onPointerDown, true);
+    document.addEventListener("keydown", onNavigationKey, true);
+    document.addEventListener("focusin", onFocusIn, true);
+    document.addEventListener("focusout", onFocusOut, true);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown, true);
+      document.removeEventListener("mousedown", onPointerDown, true);
+      document.removeEventListener("keydown", onNavigationKey, true);
+      document.removeEventListener("focusin", onFocusIn, true);
+      document.removeEventListener("focusout", onFocusOut, true);
+    };
+  }, []);
 
   useEffect(() => {
     const listener = (e: KeyboardEvent) => {
@@ -68,7 +114,7 @@ export const Keyboard = ({
         return;
       }
       if (e.code === "Enter" || e.code === "NumpadEnter" || e.key === "Enter") {
-        if (e.repeat || isKeyboardFocusedControl(active)) {
+        if (e.repeat || (isControl(active) && focusedByKeyboardRef.current())) {
           return;
         }
         // Keep a mouse-focused button from also activating.

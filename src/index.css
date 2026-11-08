@@ -39,6 +39,15 @@ body {
   color: var(--page-text);
 }
 
+/* A control focused by mouse or touch passes Enter to the game (see
+   Keyboard.tsx), so it should not look keyboard-focused when the player
+   starts typing. */
+[data-mouse-focus]:focus-visible {
+  /* !important: must beat Tailwind's focus-visible:ring-* utilities. */
+  outline: none !important;
+  box-shadow: none !important;
+}
+
 /* Custom-styled scrollbars bypass macOS overlay scrollbars, so they stay
    visible whenever the board overflows instead of only while scrolling. */
 .board-scroll::-webkit-scrollbar {
