@@ -1,8 +1,4 @@
-import {
-  MoonIcon,
-  QuestionMarkCircleIcon,
-  SunIcon,
-} from "@heroicons/react/outline";
+import { CogIcon, QuestionMarkCircleIcon } from "@heroicons/react/outline";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert } from "./components/alerts/Alert";
 import { Grid } from "./components/grid/Grid";
@@ -10,6 +6,7 @@ import { Keyboard } from "./components/keyboard/Keyboard";
 import { Logo } from "./components/logo/Logo";
 import { AboutModal } from "./components/modals/AboutModal";
 import { InfoModal } from "./components/modals/InfoModal";
+import { SettingsModal } from "./components/modals/SettingsModal";
 import { MAX_WORD_LENGTH, MIN_WORD_LENGTH } from "./constants/settings";
 import {
   isWordInWordList,
@@ -25,7 +22,6 @@ import {
   findHardModeViolation,
   loadMode,
   Mode,
-  MODES,
   saveMode,
 } from "./lib/mode";
 import { trackEvent } from "./lib/analytics";
@@ -51,12 +47,6 @@ const WIN_TOAST_MS = 2000;
 const ERROR_TOAST_MS = 2000;
 const SHARE_LABEL_MS = 2000;
 const LENGTH_TOAST_MS = 3000;
-
-const MODE_LABELS: Record<Mode, string> = {
-  easy: "Easy",
-  medium: "Medium",
-  hard: "Hard",
-};
 
 type GameOutcome = "won" | "lost" | "gave_up" | "skipped";
 
@@ -88,6 +78,7 @@ function Game() {
   const skipEndToastRef = useRef(isRestoredGameOver);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   // The answer as it was when revealed, so a fading toast never shows the
   // next word after New word.
   const [revealedAnswer, setRevealedAnswer] = useState(() =>
@@ -419,46 +410,19 @@ function Game() {
         <button
           type="button"
           className="shrink-0 mr-1 sm:mr-2"
-          onClick={onToggleTheme}
-          aria-label={
-            theme === "dark" ? "Switch to light mode" : "Switch to dark mode"
-          }
-        >
-          {theme === "dark" ? (
-            <SunIcon className="h-5 w-5 sm:h-6 sm:w-6" />
-          ) : (
-            <MoonIcon className="h-5 w-5 sm:h-6 sm:w-6" />
-          )}
-        </button>
-        <button
-          type="button"
-          className="shrink-0"
           aria-label="How to play"
           onClick={() => setIsInfoModalOpen(true)}
         >
           <QuestionMarkCircleIcon className="h-5 w-5 sm:h-6 sm:w-6" />
         </button>
-      </div>
-      <div
-        role="group"
-        aria-label="Mode"
-        className="flex mx-auto mb-2 rounded overflow-hidden border border-indigo-200 dark:border-indigo-800"
-      >
-        {MODES.map((m) => (
-          <button
-            key={m}
-            type="button"
-            aria-pressed={mode === m}
-            className={`px-2.5 py-1 text-xs font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500 ${
-              mode === m
-                ? "text-white bg-indigo-600 dark:bg-indigo-500"
-                : "text-indigo-700 bg-indigo-50 hover:bg-indigo-100 dark:text-indigo-100 dark:bg-wordle-night-bg dark:hover:bg-indigo-900"
-            }`}
-            onClick={() => onModeChange(m)}
-          >
-            {MODE_LABELS[m]}
-          </button>
-        ))}
+        <button
+          type="button"
+          className="shrink-0"
+          aria-label="Settings"
+          onClick={() => setIsSettingsModalOpen(true)}
+        >
+          <CogIcon className="h-5 w-5 sm:h-6 sm:w-6" />
+        </button>
       </div>
       <p className="text-center text-sm text-gray-500 dark:text-gray-400">
         Letters used: <span className="font-bold">{lettersUsed}</span>
@@ -489,12 +453,22 @@ function Game() {
           onEnter={onEnter}
           guesses={guesses.slice(0, revealedCount)}
           solution={solution}
-          isInputDisabled={isInfoModalOpen || isAboutModalOpen}
+          isInputDisabled={
+            isInfoModalOpen || isAboutModalOpen || isSettingsModalOpen
+          }
         />
       </div>
       <InfoModal
         isOpen={isInfoModalOpen}
         handleClose={() => setIsInfoModalOpen(false)}
+      />
+      <SettingsModal
+        isOpen={isSettingsModalOpen}
+        handleClose={() => setIsSettingsModalOpen(false)}
+        mode={mode}
+        onModeChange={onModeChange}
+        theme={theme}
+        onToggleTheme={onToggleTheme}
       />
       <AboutModal
         isOpen={isAboutModalOpen}

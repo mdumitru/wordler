@@ -195,6 +195,17 @@ test("tiles, rows and keys have accessible names", async () => {
   ).toBeInTheDocument();
 });
 
+test("the settings dialog switches the theme", async () => {
+  await renderGame();
+  openSettings();
+  const toggle = screen.getByRole("switch", { name: "Dark theme" });
+  const wasDark = document.documentElement.classList.contains("dark");
+  expect(toggle).toHaveAttribute("aria-checked", String(wasDark));
+  mouseClick(toggle);
+  expect(document.documentElement.classList.contains("dark")).toBe(!wasDark);
+  expect(toggle).toHaveAttribute("aria-checked", String(!wasDark));
+});
+
 const keyDown = (init: KeyboardEventInit) =>
   act(() => {
     fireEvent.keyDown(target(), init);
@@ -313,19 +324,29 @@ test("a saved word that left the solution list is discarded", async () => {
   expect(board().textContent).toBe("");
 });
 
-const pickMode = (name: string) =>
-  mouseClick(screen.getByRole("button", { name }));
+const openSettings = () =>
+  mouseClick(screen.getByRole("button", { name: "Settings" }));
+const closeSettings = () =>
+  mouseClick(screen.getByRole("button", { name: "Close" }));
+const modeButton = (name: string) => screen.getByRole("button", { name });
+
+// Difficulty lives in the settings dialog: open it, pick, close it again.
+const pickMode = (name: string) => {
+  openSettings();
+  mouseClick(modeButton(name));
+  closeSettings();
+};
 
 test("medium is the default mode and the choice survives a reload", async () => {
   const { unmount } = await renderGame();
-  expect(screen.getByRole("button", { name: "Medium" })).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
-  pickMode("Easy");
+  openSettings();
+  expect(modeButton("Medium")).toHaveAttribute("aria-pressed", "true");
+  mouseClick(modeButton("Easy"));
+  closeSettings();
   unmount();
   await renderGame();
-  expect(screen.getByRole("button", { name: "Easy" })).toHaveAttribute(
+  openSettings();
+  expect(modeButton("Easy")).toHaveAttribute(
     "aria-pressed",
     "true",
   );
@@ -385,14 +406,13 @@ test("hard mode rejects guesses that ignore the hints", async () => {
 test("hard mode cannot be turned on mid-round", async () => {
   await renderGame();
   submit("COT");
-  pickMode("Hard");
+  openSettings();
+  mouseClick(modeButton("Hard"));
   expect(
     toast("Hard mode can only be turned on at the start of a round"),
   ).toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "Hard" })).toHaveAttribute(
-    "aria-pressed",
-    "false",
-  );
+  expect(modeButton("Hard")).toHaveAttribute("aria-pressed", "false");
+  closeSettings();
   submit("DOG");
   expect(board().textContent).toBe("COTDOG");
 });
