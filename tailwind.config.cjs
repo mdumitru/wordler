@@ -1,4 +1,4 @@
-export default {
+module.exports = {
   // Dark mode is driven by a `dark` class on <html> (see src/lib/theme.ts).
   darkMode: "class",
   content: ["./src/**/*.{js,jsx,ts,tsx}"],
