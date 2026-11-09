@@ -37,7 +37,7 @@ describe("shareText", () => {
     });
 
   test("uses the native share sheet when there is one", async () => {
-    const share = jest.fn().mockResolvedValue(undefined);
+    const share = vi.fn().mockResolvedValue(undefined);
     (navigator as any).share = share;
     await expect(shareText("hi")).resolves.toBe("shared");
     expect(share).toHaveBeenCalledWith({ text: "hi" });
@@ -45,7 +45,7 @@ describe("shareText", () => {
 
   test("uses the clipboard API in a secure context", async () => {
     setSecure(true);
-    const writeText = jest.fn().mockResolvedValue(undefined);
+    const writeText = vi.fn().mockResolvedValue(undefined);
     (navigator as any).clipboard = { writeText };
     await expect(shareText("hi")).resolves.toBe("copied");
     expect(writeText).toHaveBeenCalledWith("hi");
@@ -53,7 +53,7 @@ describe("shareText", () => {
 
   test("falls back to execCommand over plain HTTP", async () => {
     setSecure(false);
-    const execCommand = jest.fn().mockReturnValue(true);
+    const execCommand = vi.fn().mockReturnValue(true);
     (document as any).execCommand = execCommand;
     await expect(shareText("hi")).resolves.toBe("copied");
     expect(execCommand).toHaveBeenCalledWith("copy");

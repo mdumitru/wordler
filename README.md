@@ -23,13 +23,14 @@ puzzle.
 
 ## Development
 
-Requires Node.js 18 or newer.
+Requires Node.js 20 or newer.
 
 ```sh
-npm install   # install dependencies
-npm start     # dev server on http://localhost:3000
-npm test      # run the tests in watch mode
-npm run build # production build in build/
+npm install     # install dependencies
+npm start       # dev server on http://localhost:3000
+npm test        # run the tests in watch mode (Vitest)
+npm run build   # type-check and build into build/
+npm run preview # serve the production build locally
 ```
 
 The word lists live in `public/words/` (`solutions.txt` and `guesses.txt`, one

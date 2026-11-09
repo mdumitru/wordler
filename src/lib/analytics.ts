@@ -82,7 +82,7 @@ export const initAnalytics = () => {
   if (state !== "idle") {
     return;
   }
-  if (process.env.NODE_ENV !== "production") {
+  if (!import.meta.env.PROD) {
     return disable("not a production build");
   }
   state = "loading";

@@ -43,7 +43,7 @@ test("the saved total belongs to one solution", () => {
 });
 
 test("malformed saved totals are ignored", () => {
-  const warn = jest.spyOn(console, "warn").mockImplementation(() => {});
+  const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
   for (const raw of ["{", "null", '{"solution":"CAT","activeMs":-1}']) {
     window.localStorage.setItem("gameTimer", raw);
     expect(loadActiveMs("CAT")).toBe(0);

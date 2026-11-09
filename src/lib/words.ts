@@ -70,8 +70,11 @@ export const setWordLists = (solutionsText: string, guessesText: string) => {
   };
 };
 
+// BASE_URL always ends in "/", and every path starts with one.
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+
 const fetchText = async (path: string) => {
-  const response = await fetch(`${process.env.PUBLIC_URL}${path}`);
+  const response = await fetch(`${BASE}${path}`);
   if (!response.ok) {
     throw new Error(`GET ${path} failed: ${response.status}`);
   }

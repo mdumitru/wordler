@@ -4,10 +4,10 @@ type Listener = (e: MediaQueryListEvent) => void;
 
 const mockSystemTheme = () => {
   const listeners: Listener[] = [];
-  window.matchMedia = jest.fn().mockReturnValue({
+  window.matchMedia = vi.fn().mockReturnValue({
     matches: false,
     addEventListener: (_: string, l: Listener) => listeners.push(l),
-    removeEventListener: jest.fn(),
+    removeEventListener: vi.fn(),
   });
   return (dark: boolean) =>
     listeners.forEach((l) => l({ matches: dark } as MediaQueryListEvent));
@@ -24,7 +24,7 @@ const themeColor = () =>
 
 test("follows the system theme while no theme is stored", () => {
   const emit = mockSystemTheme();
-  const onChange = jest.fn();
+  const onChange = vi.fn();
   watchSystemTheme(onChange);
   emit(true);
   expect(onChange).toHaveBeenLastCalledWith("dark");
@@ -34,7 +34,7 @@ test("follows the system theme while no theme is stored", () => {
 
 test("ignores the system theme once the player picks one", () => {
   const emit = mockSystemTheme();
-  const onChange = jest.fn();
+  const onChange = vi.fn();
   watchSystemTheme(onChange);
   setTheme("light");
   emit(true);

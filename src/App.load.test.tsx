@@ -4,7 +4,7 @@ import App from "./App";
 // Its own file: the word lists load once per module, and this test needs them
 // unloaded.
 test("a failed word list fetch shows an error and can be retried", async () => {
-  const fetchMock = jest.fn((url: RequestInfo) =>
+  const fetchMock = vi.fn((url: RequestInfo | URL) =>
     Promise.resolve({
       ok: true,
       status: 200,
@@ -16,7 +16,7 @@ test("a failed word list fetch shows an error and can be retried", async () => {
     Promise.reject(new TypeError("offline")),
   );
   window.fetch = fetchMock;
-  jest.spyOn(console, "error").mockImplementation(() => {});
+  vi.spyOn(console, "error").mockImplementation(() => {});
 
   render(<App />);
   expect(screen.getByText("Loading words…")).toBeInTheDocument();

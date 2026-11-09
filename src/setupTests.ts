@@ -1,6 +1,6 @@
 // jest-dom adds custom matchers for asserting on DOM nodes, such as
 // expect(element).toBeInTheDocument().
-import "@testing-library/jest-dom";
+import "@testing-library/jest-dom/vitest";
 
 // headlessui's Dialog observes its panel; jsdom has no IntersectionObserver.
 class IntersectionObserverStub {

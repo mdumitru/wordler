@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
+import type { Mock } from "vitest";
 import { readFileSync } from "fs";
 import { join } from "path";
 import App from "./App";
@@ -12,13 +13,13 @@ const WORD_FILES: Record<string, string> = {
   "/words/guesses.txt": wordFile("guesses.txt"),
 };
 
-jest.mock("./lib/analytics", () => ({ trackEvent: jest.fn() }));
-const trackEventMock = trackEvent as jest.MockedFunction<typeof trackEvent>;
+vi.mock("./lib/analytics", () => ({ trackEvent: vi.fn() }));
+const trackEventMock = trackEvent as Mock<typeof trackEvent>;
 const eventsNamed = (name: string) =>
   trackEventMock.mock.calls.filter(([n]) => n === name).map(([, data]) => data);
 
-jest.mock("./lib/words", () => ({
-  ...jest.requireActual("./lib/words"),
+vi.mock("./lib/words", async () => ({
+  ...(await vi.importActual<typeof import("./lib/words")>("./lib/words")),
   getWordOfDay: () => "CAT",
   getRandomWord: () => "DOG",
 }));
@@ -60,7 +61,7 @@ const toast = (text: string) => screen.getByText(text, TOAST);
 const queryToast = (text: string) => screen.queryByText(text, TOAST);
 
 const mockFetch = (fail = false) => {
-  window.fetch = jest.fn((url: RequestInfo) => {
+  window.fetch = vi.fn((url: RequestInfo | URL) => {
     const body = WORD_FILES[String(url)];
     return Promise.resolve({
       ok: !fail && body !== undefined,
@@ -78,7 +79,7 @@ const renderGame = async () => {
 };
 
 beforeEach(() => {
-  jest.useFakeTimers();
+  vi.useFakeTimers();
   window.localStorage.clear();
   trackEventMock.mockClear();
   mockFetch();
@@ -86,9 +87,9 @@ beforeEach(() => {
 
 afterEach(() => {
   act(() => {
-    jest.runOnlyPendingTimers();
+    vi.runOnlyPendingTimers();
   });
-  jest.useRealTimers();
+  vi.useRealTimers();
 });
 
 test("renders the board and the letter count once the words load", async () => {
@@ -145,7 +146,7 @@ test("New word never shows the new answer in the fading toast", async () => {
   await renderGame();
   fireEvent.click(screen.getByText("Give up"));
   act(() => {
-    jest.advanceTimersByTime(10);
+    vi.advanceTimersByTime(10);
   });
   expect(toast("The word was CAT")).toBeInTheDocument();
   fireEvent.click(screen.getByText("New word"));
@@ -158,11 +159,11 @@ test("a repeated invalid Enter keeps the toast up for 2s after the last press", 
   type("ZZZ");
   press("Enter");
   act(() => {
-    jest.advanceTimersByTime(1500);
+    vi.advanceTimersByTime(1500);
   });
   press("Enter");
   act(() => {
-    jest.advanceTimersByTime(1900);
+    vi.advanceTimersByTime(1900);
   });
   expect(toast("Word not found")).toBeInTheDocument();
 });
@@ -182,7 +183,7 @@ test("tiles, rows and keys have accessible names", async () => {
   expect(screen.getByRole("img", { name: "C correct" })).toBeInTheDocument();
   expect(screen.getByRole("img", { name: "O absent" })).toBeInTheDocument();
   act(() => {
-    jest.runOnlyPendingTimers();
+    vi.runOnlyPendingTimers();
   });
   expect(
     screen.getByRole("button", { name: "C, correct" }),
@@ -219,7 +220,7 @@ test("numpad Enter submits, a held Enter does not", async () => {
 const waitForModalTransition = () => {
   for (let i = 0; i < 5; i++) {
     act(() => {
-      jest.advanceTimersByTime(500);
+      vi.advanceTimersByTime(500);
     });
   }
 };
@@ -262,7 +263,7 @@ test("Enter submits after clicking a button and typing", async () => {
 });
 
 test("listeners are attached once, not on every render", async () => {
-  const add = jest.spyOn(window, "addEventListener");
+  const add = vi.spyOn(window, "addEventListener");
   await renderGame();
   type("COT");
   expect(add.mock.calls.filter(([type]) => type === "keydown").length).toBe(1);
@@ -284,7 +285,7 @@ test("refreshing a finished game restores it with Share and no toast", async () 
   submit("COT");
   submit("CAT");
   act(() => {
-    jest.runOnlyPendingTimers();
+    vi.runOnlyPendingTimers();
   });
   unmount();
   await renderGame();
@@ -292,7 +293,7 @@ test("refreshing a finished game restores it with Share and no toast", async () 
   expect(screen.getByText("Give up")).toBeDisabled();
   expect(queryToast("Great!")).not.toBeInTheDocument();
   act(() => {
-    jest.advanceTimersByTime(5000);
+    vi.advanceTimersByTime(5000);
   });
   expect(queryToast("Great!")).not.toBeInTheDocument();
   expect(screen.getByText("Share")).toBeInTheDocument();
@@ -342,15 +343,15 @@ test("easy mode rings a guess of the right length and announces it once", async 
     screen.getByRole("group", { name: "Guess: DOG (right length)" }),
   ).toHaveClass("ring-2");
   act(() => {
-    jest.advanceTimersByTime(3000);
+    vi.advanceTimersByTime(3000);
   });
   expect(toast("Right length! The word has 3 letters")).toBeInTheDocument();
   act(() => {
-    jest.advanceTimersByTime(5000);
+    vi.advanceTimersByTime(5000);
   });
   submit("COT");
   act(() => {
-    jest.advanceTimersByTime(3000);
+    vi.advanceTimersByTime(3000);
   });
   expect(screen.getByRole("status")).not.toHaveTextContent("Right length");
 });
@@ -359,7 +360,7 @@ test("medium mode neither rings nor announces the right length", async () => {
   await renderGame();
   submit("DOG");
   act(() => {
-    jest.advanceTimersByTime(3000);
+    vi.advanceTimersByTime(3000);
   });
   expect(screen.getByRole("group", { name: "Guess: DOG" })).not.toHaveClass(
     "ring-2",
@@ -448,22 +449,22 @@ test("giving up and skipping are reported; an untouched board is not", async () 
 });
 
 test("game time caps idle gaps and survives a reload", async () => {
-  jest.setSystemTime(new Date("2026-01-01T00:00:00Z"));
+  vi.setSystemTime(new Date("2026-01-01T00:00:00Z"));
   const { unmount } = await renderGame();
   act(() => {
-    jest.advanceTimersByTime(30_000);
+    vi.advanceTimersByTime(30_000);
   });
   type("C");
   // A long pause counts as two minutes at most.
   act(() => {
-    jest.advanceTimersByTime(60 * 60_000);
+    vi.advanceTimersByTime(60 * 60_000);
   });
   submit("OT");
   unmount();
 
   await renderGame();
   act(() => {
-    jest.advanceTimersByTime(10_000);
+    vi.advanceTimersByTime(10_000);
   });
   submit("CAT");
   expect(eventsNamed("game_end")).toEqual([

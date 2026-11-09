@@ -19,10 +19,6 @@ RUN --mount=type=cache,target=/root/.npm \
     npm ci --no-audit --no-fund
 
 COPY . .
-# CI=true makes react-scripts fail the build on lint warnings instead of
-# shipping them; source maps are not needed in the image.
-ENV CI=true \
-    GENERATE_SOURCEMAP=false
 RUN npm run build
 
 # --- runtime stage ----------------------------------------------------------

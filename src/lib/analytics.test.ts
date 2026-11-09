@@ -1,11 +1,9 @@
 import { initAnalytics, resetAnalyticsForTests, trackEvent } from "./analytics";
 
 const WEBSITE_ID = "0b6c2e0e-3f7e-4c3a-9a51-2f4e8f1d7c11";
-const env = process.env as Record<string, string | undefined>;
-const originalNodeEnv = env.NODE_ENV;
 
 const respondWith = (body: unknown, ok = true) => {
-  window.fetch = jest.fn(() =>
+  window.fetch = vi.fn(() =>
     Promise.resolve({
       ok,
       json: () =>
@@ -27,11 +25,11 @@ beforeEach(() => {
   resetAnalyticsForTests();
   document.head.innerHTML = "";
   delete window.umami;
-  env.NODE_ENV = "production";
+  vi.stubEnv("PROD", true);
 });
 
 afterAll(() => {
-  env.NODE_ENV = originalNodeEnv;
+  vi.unstubAllEnvs();
 });
 
 test("queued events are sent once the tracker loads", async () => {
@@ -42,7 +40,7 @@ test("queued events are sent once the tracker loads", async () => {
 
   const script = trackerScript();
   expect(script?.dataset.websiteId).toBe(WEBSITE_ID);
-  const track = jest.fn();
+  const track = vi.fn();
   window.umami = { track };
   script?.onload?.(new Event("load"));
   expect(track).toHaveBeenCalledWith("game_start", { length: 3 });
@@ -70,15 +68,15 @@ test("a blocked tracker drops queued and later events", async () => {
   trackEvent("game_start", { length: 3 });
   await flush();
   trackerScript()?.onerror?.(new Event("error"));
-  const track = jest.fn();
+  const track = vi.fn();
   window.umami = { track };
   trackEvent("share", { won: true });
   expect(track).not.toHaveBeenCalled();
 });
 
 test("development builds never fetch the config", () => {
-  env.NODE_ENV = "development";
-  window.fetch = jest.fn();
+  vi.stubEnv("PROD", false);
+  window.fetch = vi.fn();
   initAnalytics();
   expect(window.fetch).not.toHaveBeenCalled();
 });
