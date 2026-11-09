@@ -1,6 +1,6 @@
 import {
-  InformationCircleIcon,
   MoonIcon,
+  QuestionMarkCircleIcon,
   SunIcon,
 } from "@heroicons/react/outline";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -436,7 +436,7 @@ function Game() {
           aria-label="How to play"
           onClick={() => setIsInfoModalOpen(true)}
         >
-          <InformationCircleIcon className="h-5 w-5 sm:h-6 sm:w-6" />
+          <QuestionMarkCircleIcon className="h-5 w-5 sm:h-6 sm:w-6" />
         </button>
       </div>
       <div
