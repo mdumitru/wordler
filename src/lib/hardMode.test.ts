@@ -1,4 +1,4 @@
-import { findHardModeViolation, loadMode, saveMode } from "./mode";
+import { findHardModeViolation } from "./hardMode";
 
 const check = (guess: string, guesses: string[], solution = "CRANE") =>
   findHardModeViolation(guess, guesses, solution);
@@ -33,13 +33,4 @@ test("repeated hints require repeated letters", () => {
 
 test("absent letters may be guessed again", () => {
   expect(check("PLUMB", ["PLUMS"])).toBeNull();
-});
-
-test("the mode defaults to medium and survives a reload", () => {
-  localStorage.clear();
-  expect(loadMode()).toBe("medium");
-  saveMode("hard");
-  expect(loadMode()).toBe("hard");
-  localStorage.setItem("mode", "nightmare");
-  expect(loadMode()).toBe("medium");
 });

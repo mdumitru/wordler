@@ -12,6 +12,22 @@
   --scroll-thumb: #94a3b8; /* slate-400 */
 }
 
+:root {
+  --wordle-correct: #6aaa64;
+  --wordle-present: #c9b458;
+  --wordle-night-correct: #538d4e;
+  --wordle-night-present: #b59f3b;
+}
+
+/* High contrast mode (src/lib/settings.ts): Wordle's orange and blue, the
+   same in both themes. */
+html.high-contrast {
+  --wordle-correct: #f5793a;
+  --wordle-present: #85c0f9;
+  --wordle-night-correct: #f5793a;
+  --wordle-night-present: #85c0f9;
+}
+
 html.dark {
   color-scheme: dark;
   --page-bg: #121213; /* wordle-night-bg */

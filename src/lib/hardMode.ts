@@ -1,36 +1,6 @@
 import { ordinal } from "./ordinal";
 import { getGuessStatuses } from "./statuses";
 
-// easy: a guess with the answer's length is highlighted and announced.
-// medium: the classic rules.
-// hard: every guess must reuse the hints found so far.
-export type Mode = "easy" | "medium" | "hard";
-
-export const MODES: Mode[] = ["easy", "medium", "hard"];
-
-const STORAGE_KEY = "mode";
-const DEFAULT_MODE: Mode = "medium";
-
-const isMode = (value: unknown): value is Mode => MODES.includes(value as Mode);
-
-export const loadMode = (): Mode => {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return isMode(stored) ? stored : DEFAULT_MODE;
-  } catch (err) {
-    console.warn("Could not load mode", err);
-    return DEFAULT_MODE;
-  }
-};
-
-export const saveMode = (mode: Mode) => {
-  try {
-    localStorage.setItem(STORAGE_KEY, mode);
-  } catch (err) {
-    console.warn("Could not save mode", err);
-  }
-};
-
 // Hard mode, as in Wordle: green letters stay in their spot and yellow
 // letters must be reused. Returns the first broken rule, or null.
 export const findHardModeViolation = (

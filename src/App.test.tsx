@@ -81,6 +81,7 @@ const renderGame = async () => {
 beforeEach(() => {
   vi.useFakeTimers();
   window.localStorage.clear();
+  document.documentElement.classList.remove("high-contrast");
   trackEventMock.mockClear();
   mockFetch();
 });
@@ -195,10 +196,64 @@ test("tiles, rows and keys have accessible names", async () => {
   ).toBeInTheDocument();
 });
 
+const openSettings = () =>
+  mouseClick(screen.getByRole("button", { name: "Settings" }));
+const closeSettings = () =>
+  mouseClick(screen.getByRole("button", { name: "Close" }));
+const settingSwitch = (name: string) => screen.getByRole("switch", { name });
+
+// Settings live in a dialog: open it, flip a switch, close it again.
+const toggleSetting = (name: string) => {
+  openSettings();
+  mouseClick(settingSwitch(name));
+  closeSettings();
+};
+
+test("settings start off and survive a reload", async () => {
+  const { unmount } = await renderGame();
+  openSettings();
+  for (const name of [
+    "Hard Mode",
+    "Reveal Length",
+    "High Contrast Mode",
+    "Onscreen Keyboard Input Only",
+  ]) {
+    expect(settingSwitch(name)).toHaveAttribute("aria-checked", "false");
+  }
+  mouseClick(settingSwitch("Reveal Length"));
+  closeSettings();
+  unmount();
+  await renderGame();
+  openSettings();
+  expect(settingSwitch("Reveal Length")).toHaveAttribute(
+    "aria-checked",
+    "true",
+  );
+});
+
+test("high contrast mode marks the page for the orange and blue palette", async () => {
+  await renderGame();
+  toggleSetting("High Contrast Mode");
+  expect(document.documentElement).toHaveClass("high-contrast");
+  toggleSetting("High Contrast Mode");
+  expect(document.documentElement).not.toHaveClass("high-contrast");
+});
+
+test("onscreen keyboard input only ignores physical keys", async () => {
+  await renderGame();
+  toggleSetting("Onscreen Keyboard Input Only");
+  type("COT");
+  expect(board().textContent).toBe("");
+  ["C", "O", "T"].forEach((letter) =>
+    mouseClick(screen.getByRole("button", { name: letter })),
+  );
+  expect(board().textContent).toBe("COT");
+});
+
 test("the settings dialog switches the theme", async () => {
   await renderGame();
   openSettings();
-  const toggle = screen.getByRole("switch", { name: "Dark theme" });
+  const toggle = settingSwitch("Dark Theme");
   const wasDark = document.documentElement.classList.contains("dark");
   expect(toggle).toHaveAttribute("aria-checked", String(wasDark));
   mouseClick(toggle);
@@ -324,37 +379,9 @@ test("a saved word that left the solution list is discarded", async () => {
   expect(board().textContent).toBe("");
 });
 
-const openSettings = () =>
-  mouseClick(screen.getByRole("button", { name: "Settings" }));
-const closeSettings = () =>
-  mouseClick(screen.getByRole("button", { name: "Close" }));
-const modeButton = (name: string) => screen.getByRole("button", { name });
-
-// Difficulty lives in the settings dialog: open it, pick, close it again.
-const pickMode = (name: string) => {
-  openSettings();
-  mouseClick(modeButton(name));
-  closeSettings();
-};
-
-test("medium is the default mode and the choice survives a reload", async () => {
-  const { unmount } = await renderGame();
-  openSettings();
-  expect(modeButton("Medium")).toHaveAttribute("aria-pressed", "true");
-  mouseClick(modeButton("Easy"));
-  closeSettings();
-  unmount();
+test("reveal length rings a guess of the right length and announces it once", async () => {
   await renderGame();
-  openSettings();
-  expect(modeButton("Easy")).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
-});
-
-test("easy mode rings a guess of the right length and announces it once", async () => {
-  await renderGame();
-  pickMode("Easy");
+  toggleSetting("Reveal Length");
   submit("CART");
   expect(screen.getByRole("group", { name: "Guess: CART" })).not.toHaveClass(
     "ring-2",
@@ -377,7 +404,7 @@ test("easy mode rings a guess of the right length and announces it once", async 
   expect(screen.getByRole("status")).not.toHaveTextContent("Right length");
 });
 
-test("medium mode neither rings nor announces the right length", async () => {
+test("without reveal length, nothing rings nor announces the right length", async () => {
   await renderGame();
   submit("DOG");
   act(() => {
@@ -391,7 +418,7 @@ test("medium mode neither rings nor announces the right length", async () => {
 
 test("hard mode rejects guesses that ignore the hints", async () => {
   await renderGame();
-  pickMode("Hard");
+  toggleSetting("Hard Mode");
   submit("COT");
   submit("DOG");
   expect(toast("1st letter must be C")).toBeInTheDocument();
@@ -407,11 +434,11 @@ test("hard mode cannot be turned on mid-round", async () => {
   await renderGame();
   submit("COT");
   openSettings();
-  mouseClick(modeButton("Hard"));
+  mouseClick(settingSwitch("Hard Mode"));
   expect(
-    toast("Hard mode can only be turned on at the start of a round"),
+    toast("Hard mode can only be enabled at the start of a round"),
   ).toBeInTheDocument();
-  expect(modeButton("Hard")).toHaveAttribute("aria-pressed", "false");
+  expect(settingSwitch("Hard Mode")).toHaveAttribute("aria-checked", "false");
   closeSettings();
   submit("DOG");
   expect(board().textContent).toBe("COTDOG");

@@ -6,6 +6,13 @@ const EMOJI: Record<CharStatus, string> = {
   absent: "⬜",
 };
 
+// High contrast mode's colours, as in Wordle.
+const HIGH_CONTRAST_EMOJI: Record<CharStatus, string> = {
+  correct: "🟧",
+  present: "🟦",
+  absent: "⬜",
+};
+
 export const countLetters = (guesses: string[]) =>
   guesses.reduce((total, guess) => total + guess.length, 0);
 
@@ -15,11 +22,13 @@ export const getShareText = (
   guesses: string[],
   solution: string,
   isGameWon: boolean,
+  highContrast = false,
 ) => {
+  const emoji = highContrast ? HIGH_CONTRAST_EMOJI : EMOJI;
   const score = isGameWon ? guesses.length : "X";
   const rows = guesses.map((guess) =>
     getGuessStatuses(guess, solution)
-      .map((status) => EMOJI[status])
+      .map((status) => emoji[status])
       .join(""),
   );
   const letters = countLetters(guesses);

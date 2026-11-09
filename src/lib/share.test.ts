@@ -12,6 +12,12 @@ test("a loss shows X", () => {
   );
 });
 
+test("high contrast uses orange and blue squares", () => {
+  expect(getShareText(["COT", "CAT"], "CAT", true, true)).toBe(
+    "Wordler 2 · 6 letters\n\n🟧⬜🟧\n🟧🟧🟧",
+  );
+});
+
 test("a single letter is singular", () => {
   expect(getShareText(["A"], "CAT", false).split("\n")[0]).toBe(
     "Wordler X · 1 letter",

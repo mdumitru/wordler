@@ -11,6 +11,8 @@ type Props = {
   solution: string;
   // While a modal is open, physical keys must not reach the game.
   isInputDisabled?: boolean;
+  // Onscreen Keyboard Input Only: physical keys never type.
+  isPhysicalKeyboardIgnored?: boolean;
 };
 
 const isTextField = (el: Element | null) =>
@@ -39,6 +41,7 @@ export const Keyboard = ({
   guesses,
   solution,
   isInputDisabled = false,
+  isPhysicalKeyboardIgnored = false,
 }: Props) => {
   const charStatuses = getStatuses(guesses, solution);
 
@@ -53,9 +56,21 @@ export const Keyboard = ({
   };
 
   // The window listener is attached once and always calls the latest props.
-  const latestRef = useRef({ onChar, onDelete, onEnter, isInputDisabled });
+  const latestRef = useRef({
+    onChar,
+    onDelete,
+    onEnter,
+    isInputDisabled,
+    isPhysicalKeyboardIgnored,
+  });
   const focusedByKeyboardRef = useRef<() => boolean>(() => false);
-  latestRef.current = { onChar, onDelete, onEnter, isInputDisabled };
+  latestRef.current = {
+    onChar,
+    onDelete,
+    onEnter,
+    isInputDisabled,
+    isPhysicalKeyboardIgnored,
+  };
 
   // A control the player reached with the keyboard keeps its own Enter
   // activation. One focused by a click or tap (or given focus back after a
@@ -106,7 +121,13 @@ export const Keyboard = ({
   useEffect(() => {
     const listener = (e: KeyboardEvent) => {
       const latest = latestRef.current;
-      if (latest.isInputDisabled || e.ctrlKey || e.metaKey || e.altKey) {
+      if (
+        latest.isInputDisabled ||
+        latest.isPhysicalKeyboardIgnored ||
+        e.ctrlKey ||
+        e.metaKey ||
+        e.altKey
+      ) {
         return;
       }
       const active = document.activeElement;

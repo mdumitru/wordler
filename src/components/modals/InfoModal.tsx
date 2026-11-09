@@ -137,21 +137,27 @@ export const InfoModal = ({ isOpen, handleClose }: Props) => {
                     </div>
 
                     <h4 className="pt-1 font-medium text-gray-900 dark:text-white">
-                      Modes
+                      Settings
                     </h4>
+                    <p>The gear button opens the settings:</p>
                     <ul className="list-disc pl-5 space-y-1">
                       <li>
-                        <strong>Easy</strong> rings a guess that has the same
-                        length as the word and tells you so.
+                        <strong>Hard Mode</strong> makes every guess reuse the
+                        hints so far: green letters stay in their spot and
+                        yellow letters must appear. It can only be turned on at
+                        the start of a round.
                       </li>
                       <li>
-                        <strong>Medium</strong> is the standard game.
+                        <strong>Reveal Length</strong> rings a guess that has
+                        the same length as the word and tells you so.
                       </li>
                       <li>
-                        <strong>Hard</strong> makes every guess reuse the hints
-                        so far: green letters stay in their spot and yellow
-                        letters must appear. It can only be turned on at the
-                        start of a round.
+                        <strong>High Contrast Mode</strong> swaps green and
+                        yellow for orange and blue.
+                      </li>
+                      <li>
+                        <strong>Onscreen Keyboard Input Only</strong> ignores
+                        your physical keyboard.
                       </li>
                     </ul>
 

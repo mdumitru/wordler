@@ -1,33 +1,64 @@
-import { Fragment } from "react";
+import { Fragment, ReactNode } from "react";
 import { Dialog, Switch, Transition } from "@headlessui/react";
 import { XIcon } from "@heroicons/react/outline";
-import { Mode, MODES } from "../../lib/mode";
+import { SettingKey, Settings } from "../../lib/settings";
 import { Theme } from "../../lib/theme";
-
-const MODE_LABELS: Record<Mode, string> = {
-  easy: "Easy",
-  medium: "Medium",
-  hard: "Hard",
-};
 
 type Props = {
   isOpen: boolean;
   handleClose: () => void;
-  mode: Mode;
-  onModeChange: (mode: Mode) => void;
+  settings: Settings;
+  onSettingChange: (key: SettingKey, value: boolean) => void;
   theme: Theme;
   onToggleTheme: () => void;
 };
 
+type ToggleProps = {
+  label: string;
+  description?: ReactNode;
+  checked: boolean;
+  onChange: (value: boolean) => void;
+};
+
+const Toggle = ({ label, description, checked, onChange }: ToggleProps) => (
+  <Switch.Group as="div" className="flex items-center justify-between gap-4 py-3">
+    <div>
+      <Switch.Label className="text-sm font-medium text-gray-900 dark:text-white">
+        {label}
+      </Switch.Label>
+      {description && (
+        <Switch.Description className="text-xs text-gray-500 dark:text-gray-400">
+          {description}
+        </Switch.Description>
+      )}
+    </div>
+    <Switch
+      checked={checked}
+      onChange={onChange}
+      className={`${
+        checked
+          ? "bg-wordle-correct dark:bg-wordle-night-correct"
+          : "bg-gray-300 dark:bg-gray-600"
+      } relative inline-flex shrink-0 h-6 w-11 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-offset-gray-800`}
+    >
+      <span
+        aria-hidden="true"
+        className={`${
+          checked ? "translate-x-6" : "translate-x-1"
+        } inline-block h-4 w-4 mt-1 rounded-full bg-white transform transition-transform`}
+      />
+    </Switch>
+  </Switch.Group>
+);
+
 export const SettingsModal = ({
   isOpen,
   handleClose,
-  mode,
-  onModeChange,
+  settings,
+  onSettingChange,
   theme,
   onToggleTheme,
 }: Props) => {
-  const isDark = theme === "dark";
   return (
     <Transition.Root show={isOpen} as={Fragment}>
       <Dialog
@@ -81,63 +112,35 @@ export const SettingsModal = ({
               </Dialog.Title>
 
               <div className="mt-4 divide-y divide-gray-200 dark:divide-gray-700">
-                <div className="flex items-center justify-between gap-4 py-3">
-                  <div>
-                    <p
-                      id="settings-difficulty"
-                      className="text-sm font-medium text-gray-900 dark:text-white"
-                    >
-                      Difficulty
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      Hard can only be turned on at the start of a round
-                    </p>
-                  </div>
-                  <div
-                    role="group"
-                    aria-labelledby="settings-difficulty"
-                    className="flex shrink-0 rounded overflow-hidden border border-indigo-200 dark:border-indigo-800"
-                  >
-                    {MODES.map((m) => (
-                      <button
-                        key={m}
-                        type="button"
-                        aria-pressed={mode === m}
-                        className={`px-2.5 py-1 text-xs font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500 ${
-                          mode === m
-                            ? "text-white bg-indigo-600 dark:bg-indigo-500"
-                            : "text-indigo-700 bg-indigo-50 hover:bg-indigo-100 dark:text-indigo-100 dark:bg-gray-800 dark:hover:bg-indigo-900"
-                        }`}
-                        onClick={() => onModeChange(m)}
-                      >
-                        {MODE_LABELS[m]}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <Switch.Group
-                  as="div"
-                  className="flex items-center justify-between gap-4 py-3"
-                >
-                  <Switch.Label className="text-sm font-medium text-gray-900 dark:text-white">
-                    Dark theme
-                  </Switch.Label>
-                  <Switch
-                    checked={isDark}
-                    onChange={onToggleTheme}
-                    className={`${
-                      isDark ? "bg-indigo-500" : "bg-gray-300"
-                    } relative inline-flex shrink-0 h-6 w-11 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-offset-gray-800`}
-                  >
-                    <span
-                      aria-hidden="true"
-                      className={`${
-                        isDark ? "translate-x-6" : "translate-x-1"
-                      } inline-block h-4 w-4 mt-1 rounded-full bg-white transform transition-transform`}
-                    />
-                  </Switch>
-                </Switch.Group>
+                <Toggle
+                  label="Hard Mode"
+                  description="Any revealed hints must be used in subsequent guesses"
+                  checked={settings.hardMode}
+                  onChange={(v) => onSettingChange("hardMode", v)}
+                />
+                <Toggle
+                  label="Reveal Length"
+                  description="Rings guesses that match the hidden word's length and announces the length the first time"
+                  checked={settings.revealLength}
+                  onChange={(v) => onSettingChange("revealLength", v)}
+                />
+                <Toggle
+                  label="Dark Theme"
+                  checked={theme === "dark"}
+                  onChange={onToggleTheme}
+                />
+                <Toggle
+                  label="High Contrast Mode"
+                  description="Contrast and colorblindness improvements"
+                  checked={settings.highContrast}
+                  onChange={(v) => onSettingChange("highContrast", v)}
+                />
+                <Toggle
+                  label="Onscreen Keyboard Input Only"
+                  description="Ignore key input except from the onscreen keyboard. Most helpful for users using speech recognition or other assistive devices."
+                  checked={settings.onscreenKeyboardOnly}
+                  onChange={(v) => onSettingChange("onscreenKeyboardOnly", v)}
+                />
               </div>
             </div>
           </Transition.Child>

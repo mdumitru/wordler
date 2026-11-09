@@ -6,15 +6,17 @@ module.exports = {
     extend: {
       colors: {
         // NYT Wordle palette; "night-*" entries are its dark-mode colours.
+        // The hint colours are CSS variables (src/index.css) so high contrast
+        // mode can swap them.
         wordle: {
-          correct: "#6aaa64",
-          present: "#c9b458",
+          correct: "var(--wordle-correct)",
+          present: "var(--wordle-present)",
           absent: "#787c7e",
           empty: "#d3d6da", // empty tile border and unused keys
           filled: "#878a8c", // border of a typed, unchecked tile
           "night-bg": "#121213",
-          "night-correct": "#538d4e",
-          "night-present": "#b59f3b",
+          "night-correct": "var(--wordle-night-correct)",
+          "night-present": "var(--wordle-night-present)",
           "night-absent": "#3a3a3c",
           "night-empty": "#3a3a3c",
           "night-filled": "#565758",

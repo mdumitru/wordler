@@ -15,7 +15,7 @@ type Props = {
   revealDelayMs?: number;
   // The winning guess: its tiles bounce once they have been revealed.
   isWinningRow?: boolean;
-  // Easy mode: the guess has the answer's length.
+  // Reveal Length: the guess has the answer's length.
   isLengthMatch?: boolean;
 };
 
@@ -37,7 +37,7 @@ export const CompletedRow = ({
   return (
     <div
       // w-max: hug this row's tiles instead of stretching to the widest row,
-      // so the easy-mode ring stays the guess's own size.
+      // so the Reveal Length ring stays the guess's own size.
       className={`flex w-max mb-1${
         isLengthMatch
           ? " rounded-lg ring-2 ring-offset-1 ring-indigo-500 dark:ring-indigo-400 dark:ring-offset-wordle-night-bg"

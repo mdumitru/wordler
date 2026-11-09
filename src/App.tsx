@@ -18,12 +18,14 @@ import {
   loadWords,
 } from "./lib/words";
 import { loadGame, SavedGame, saveGame } from "./lib/storage";
+import { findHardModeViolation } from "./lib/hardMode";
 import {
-  findHardModeViolation,
-  loadMode,
-  Mode,
-  saveMode,
-} from "./lib/mode";
+  applyHighContrast,
+  loadSettings,
+  saveSetting,
+  SettingKey,
+  Settings,
+} from "./lib/settings";
 import { trackEvent } from "./lib/analytics";
 import {
   GameTimer,
@@ -85,7 +87,11 @@ function Game() {
     initialGame?.isAnswerRevealed ? initialGame.solution : "",
   );
 
-  const [mode, setModeState] = useState<Mode>(loadMode);
+  const [settings, setSettings] = useState<Settings>(() => {
+    const loaded = loadSettings();
+    applyHighContrast(loaded.highContrast);
+    return loaded;
+  });
   const [theme, setThemeState] = useState<Theme>(getTheme);
   useEffect(() => watchSystemTheme(setThemeState), []);
   const [shareLabel, setShareLabel] = useState("Share");
@@ -265,7 +271,7 @@ function Game() {
       return showToast("Word not found", ERROR_TOAST_MS);
     }
 
-    if (mode === "hard") {
+    if (settings.hardMode) {
       const violation = findHardModeViolation(currentGuess, guesses, solution);
       if (violation) {
         return showToast(violation, ERROR_TOAST_MS);
@@ -292,7 +298,7 @@ function Game() {
       setRevealedAnswer(solution);
       setIsAnswerRevealed(true);
     } else if (
-      mode === "easy" &&
+      settings.revealLength &&
       guess.length === solution.length &&
       !guesses.some((g) => g.length === solution.length)
     ) {
@@ -309,19 +315,19 @@ function Game() {
     }
   };
 
-  const onModeChange = (next: Mode) => {
-    if (next === mode) {
-      return;
-    }
+  const onSettingChange = (key: SettingKey, value: boolean) => {
     // As in Wordle, hard mode cannot be switched on partway through a round.
-    if (next === "hard" && guesses.length > 0 && !isGameOver) {
+    if (key === "hardMode" && value && guesses.length > 0 && !isGameOver) {
       return showToast(
-        "Hard mode can only be turned on at the start of a round",
+        "Hard mode can only be enabled at the start of a round",
         ERROR_TOAST_MS,
       );
     }
-    saveMode(next);
-    setModeState(next);
+    if (key === "highContrast") {
+      applyHighContrast(value);
+    }
+    saveSetting(key, value);
+    setSettings((prev) => ({ ...prev, [key]: value }));
   };
 
   const onNewWord = () => {
@@ -365,7 +371,12 @@ function Game() {
 
   const onShare = async () => {
     trackEvent("share", { won: isGameWon, length: solution.length });
-    const text = getShareText(guesses, solution, isGameWon);
+    const text = getShareText(
+      guesses,
+      solution,
+      isGameWon,
+      settings.highContrast,
+    );
     let label = "Share";
     try {
       const outcome = await shareText(text);
@@ -434,7 +445,7 @@ function Game() {
         maxGuesses={maxGuesses}
         isGameWon={isGameWon}
         isGameOver={isGameOver}
-        highlightLength={mode === "easy"}
+        highlightLength={settings.revealLength}
       />
       {/* Always rendered so the board and keyboard do not jump when it appears. */}
       <button
@@ -453,6 +464,7 @@ function Game() {
           onEnter={onEnter}
           guesses={guesses.slice(0, revealedCount)}
           solution={solution}
+          isPhysicalKeyboardIgnored={settings.onscreenKeyboardOnly}
           isInputDisabled={
             isInfoModalOpen || isAboutModalOpen || isSettingsModalOpen
           }
@@ -465,8 +477,8 @@ function Game() {
       <SettingsModal
         isOpen={isSettingsModalOpen}
         handleClose={() => setIsSettingsModalOpen(false)}
-        mode={mode}
-        onModeChange={onModeChange}
+        settings={settings}
+        onSettingChange={onSettingChange}
         theme={theme}
         onToggleTheme={onToggleTheme}
       />
