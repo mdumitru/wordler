@@ -14,8 +14,9 @@ declare global {
   }
 }
 
-const CONFIG_URL = "/stats/config.json";
-const SCRIPT_URL = "/stats/script.js";
+// BASE_URL ends in "/", so these stay under the app's base path.
+const CONFIG_URL = `${import.meta.env.BASE_URL}stats/config.json`;
+const SCRIPT_URL = `${import.meta.env.BASE_URL}stats/script.js`;
 // Events fired before the tracker loads wait here; the cap bounds memory if
 // it never does.
 const MAX_QUEUED = 50;
