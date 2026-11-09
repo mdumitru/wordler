@@ -303,3 +303,87 @@ test("a saved word that left the solution list is discarded", async () => {
   await renderGame();
   expect(board().textContent).toBe("");
 });
+
+const pickMode = (name: string) =>
+  mouseClick(screen.getByRole("button", { name }));
+
+test("medium is the default mode and the choice survives a reload", async () => {
+  const { unmount } = await renderGame();
+  expect(screen.getByRole("button", { name: "Medium" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  pickMode("Easy");
+  unmount();
+  await renderGame();
+  expect(screen.getByRole("button", { name: "Easy" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+});
+
+test("easy mode rings a guess of the right length and announces it once", async () => {
+  await renderGame();
+  pickMode("Easy");
+  submit("CART");
+  expect(screen.getByRole("group", { name: "Guess: CART" })).not.toHaveClass(
+    "ring-2",
+  );
+  submit("DOG");
+  expect(
+    screen.getByRole("group", { name: "Guess: DOG (right length)" }),
+  ).toHaveClass("ring-2");
+  act(() => {
+    jest.advanceTimersByTime(3000);
+  });
+  expect(toast("Right length! The word has 3 letters")).toBeInTheDocument();
+  act(() => {
+    jest.advanceTimersByTime(5000);
+  });
+  submit("COT");
+  act(() => {
+    jest.advanceTimersByTime(3000);
+  });
+  expect(screen.getByRole("status")).not.toHaveTextContent("Right length");
+});
+
+test("medium mode neither rings nor announces the right length", async () => {
+  await renderGame();
+  submit("DOG");
+  act(() => {
+    jest.advanceTimersByTime(3000);
+  });
+  expect(screen.getByRole("group", { name: "Guess: DOG" })).not.toHaveClass(
+    "ring-2",
+  );
+  expect(queryToast("Right length! The word has 3 letters")).toBeNull();
+});
+
+test("hard mode rejects guesses that ignore the hints", async () => {
+  await renderGame();
+  pickMode("Hard");
+  submit("COT");
+  submit("DOG");
+  expect(toast("1st letter must be C")).toBeInTheDocument();
+  expect(board().textContent).toBe("COTDOG");
+  press("Backspace");
+  press("Backspace");
+  press("Backspace");
+  submit("CUT");
+  expect(board().textContent).toBe("COTCUT");
+});
+
+test("hard mode cannot be turned on mid-round", async () => {
+  await renderGame();
+  submit("COT");
+  pickMode("Hard");
+  expect(
+    toast("Hard mode can only be turned on at the start of a round"),
+  ).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Hard" })).toHaveAttribute(
+    "aria-pressed",
+    "false",
+  );
+  submit("DOG");
+  expect(board().textContent).toBe("COTDOG");
+});

@@ -6,13 +6,8 @@ import {
   MIN_GUESSES,
   MIN_WORD_LENGTH,
 } from "../../constants/settings";
+import { ordinal } from "../../lib/ordinal";
 import { getSolutionLengthRange } from "../../lib/words";
-
-const ordinal = (n: number) => {
-  const suffixes = ["th", "st", "nd", "rd"];
-  const v = n % 100;
-  return `${n}${suffixes[(v - 20) % 10] || suffixes[v] || suffixes[0]}`;
-};
 
 type Props = {
   isOpen: boolean;
@@ -140,6 +135,25 @@ export const InfoModal = ({ isOpen, handleClose }: Props) => {
                         how it continues.
                       </p>
                     </div>
+
+                    <h4 className="pt-1 font-medium text-gray-900 dark:text-white">
+                      Modes
+                    </h4>
+                    <ul className="list-disc pl-5 space-y-1">
+                      <li>
+                        <strong>Easy</strong> rings a guess that has the same
+                        length as the word and tells you so.
+                      </li>
+                      <li>
+                        <strong>Medium</strong> is the standard game.
+                      </li>
+                      <li>
+                        <strong>Hard</strong> makes every guess reuse the hints
+                        so far: green letters stay in their spot and yellow
+                        letters must appear. It can only be turned on at the
+                        start of a round.
+                      </li>
+                    </ul>
 
                     <h4 className="pt-1 font-medium text-gray-900 dark:text-white">
                       Scoring and buttons

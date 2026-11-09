@@ -11,6 +11,8 @@ type Props = {
   maxGuesses: number;
   isGameWon: boolean;
   isGameOver: boolean;
+  // Easy mode: ring the guesses that have the answer's length.
+  highlightLength?: boolean;
 };
 
 export const Grid = ({
@@ -20,6 +22,7 @@ export const Grid = ({
   maxGuesses,
   isGameWon,
   isGameOver,
+  highlightLength = false,
 }: Props) => {
   const showCurrentRow = !isGameOver && guesses.length < maxGuesses;
   // The board always starts 6 rows tall; longer words with extra guesses
@@ -86,7 +89,8 @@ export const Grid = ({
         // Top padding leaves room for winning tiles to bounce without clipping.
         className="board-scroll relative min-h-0 overflow-auto pt-6"
       >
-        <div ref={rowsRef} data-testid="board" className="w-max mx-auto">
+        {/* px-1 leaves room for the easy-mode ring around a row. */}
+        <div ref={rowsRef} data-testid="board" className="w-max mx-auto px-1">
           {guesses.map((guess, i) => (
             <CompletedRow
               key={i}
@@ -94,6 +98,11 @@ export const Grid = ({
               solution={solution}
               revealDelayMs={i >= firstNewRow ? 0 : undefined}
               isWinningRow={isGameWon && i === guesses.length - 1}
+              isLengthMatch={
+                highlightLength &&
+                guess !== solution &&
+                guess.length === solution.length
+              }
             />
           ))}
           {showCurrentRow && <CurrentRow guess={currentGuess} />}

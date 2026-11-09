@@ -21,6 +21,13 @@ import {
   loadWords,
 } from "./lib/words";
 import { loadGame, SavedGame, saveGame } from "./lib/storage";
+import {
+  findHardModeViolation,
+  loadMode,
+  Mode,
+  MODES,
+  saveMode,
+} from "./lib/mode";
 import { getTheme, setTheme, Theme, watchSystemTheme } from "./lib/theme";
 import { countLetters, getShareText, shareText } from "./lib/share";
 import {
@@ -33,6 +40,13 @@ const ANSWER_TOAST_MS = 5000;
 const WIN_TOAST_MS = 2000;
 const ERROR_TOAST_MS = 2000;
 const SHARE_LABEL_MS = 2000;
+const LENGTH_TOAST_MS = 3000;
+
+const MODE_LABELS: Record<Mode, string> = {
+  easy: "Easy",
+  medium: "Medium",
+  hard: "Hard",
+};
 
 // The saved game, unless its word has since left the solution list.
 const loadRestorableGame = (): SavedGame | null => {
@@ -68,6 +82,7 @@ function Game() {
     initialGame?.isAnswerRevealed ? initialGame.solution : "",
   );
 
+  const [mode, setModeState] = useState<Mode>(loadMode);
   const [theme, setThemeState] = useState<Theme>(getTheme);
   useEffect(() => watchSystemTheme(setThemeState), []);
   const [shareLabel, setShareLabel] = useState("Share");
@@ -79,6 +94,7 @@ function Game() {
   const [toast, setToast] = useState({ message: "", isOpen: false });
   const toastTimerRef = useRef<number>();
   const shareTimerRef = useRef<number>();
+  const lengthToastTimerRef = useRef<number>();
 
   const showToast = useCallback((message: string, ms: number) => {
     window.clearTimeout(toastTimerRef.current);
@@ -102,6 +118,7 @@ function Game() {
     () => () => {
       window.clearTimeout(toastTimerRef.current);
       window.clearTimeout(shareTimerRef.current);
+      window.clearTimeout(lengthToastTimerRef.current);
     },
     [],
   );
@@ -189,6 +206,13 @@ function Game() {
       return showToast("Word not found", ERROR_TOAST_MS);
     }
 
+    if (mode === "hard") {
+      const violation = findHardModeViolation(currentGuess, guesses, solution);
+      if (violation) {
+        return showToast(violation, ERROR_TOAST_MS);
+      }
+    }
+
     const guess = currentGuess;
     setCurrentGuess("");
     setGuesses((prev) => [...prev, guess]);
@@ -203,13 +227,44 @@ function Game() {
       setEndAnimationMs(getRowRevealMs(guess.length));
       setRevealedAnswer(solution);
       setIsAnswerRevealed(true);
+    } else if (
+      mode === "easy" &&
+      guess.length === solution.length &&
+      !guesses.some((g) => g.length === solution.length)
+    ) {
+      // Announce the first guess of the right length once its row is shown.
+      window.clearTimeout(lengthToastTimerRef.current);
+      lengthToastTimerRef.current = window.setTimeout(
+        () =>
+          showToast(
+            `Right length! The word has ${solution.length} letters`,
+            LENGTH_TOAST_MS,
+          ),
+        prefersReducedMotion() ? 0 : getRowRevealMs(guess.length),
+      );
     }
+  };
+
+  const onModeChange = (next: Mode) => {
+    if (next === mode) {
+      return;
+    }
+    // As in Wordle, hard mode cannot be switched on partway through a round.
+    if (next === "hard" && guesses.length > 0 && !isGameOver) {
+      return showToast(
+        "Hard mode can only be turned on at the start of a round",
+        ERROR_TOAST_MS,
+      );
+    }
+    saveMode(next);
+    setModeState(next);
   };
 
   const onNewWord = () => {
     skipEndToastRef.current = false;
     hideToast();
     window.clearTimeout(shareTimerRef.current);
+    window.clearTimeout(lengthToastTimerRef.current);
     setShareLabel("Share");
     setSolution(getRandomWord(solution));
     setGuesses([]);
@@ -219,6 +274,7 @@ function Game() {
   };
 
   const onGiveUp = () => {
+    window.clearTimeout(lengthToastTimerRef.current);
     setEndAnimationMs(0);
     setRevealedAnswer(solution);
     setIsAnswerRevealed(true);
@@ -297,6 +353,27 @@ function Game() {
           <InformationCircleIcon className="h-5 w-5 sm:h-6 sm:w-6" />
         </button>
       </div>
+      <div
+        role="group"
+        aria-label="Mode"
+        className="flex mx-auto mb-2 rounded overflow-hidden border border-indigo-200 dark:border-indigo-800"
+      >
+        {MODES.map((m) => (
+          <button
+            key={m}
+            type="button"
+            aria-pressed={mode === m}
+            className={`px-2.5 py-1 text-xs font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500 ${
+              mode === m
+                ? "text-white bg-indigo-600 dark:bg-indigo-500"
+                : "text-indigo-700 bg-indigo-50 hover:bg-indigo-100 dark:text-indigo-100 dark:bg-wordle-night-bg dark:hover:bg-indigo-900"
+            }`}
+            onClick={() => onModeChange(m)}
+          >
+            {MODE_LABELS[m]}
+          </button>
+        ))}
+      </div>
       <p className="text-center text-sm text-gray-500 dark:text-gray-400">
         Letters used: <span className="font-bold">{lettersUsed}</span>
       </p>
@@ -307,6 +384,7 @@ function Game() {
         maxGuesses={maxGuesses}
         isGameWon={isGameWon}
         isGameOver={isGameOver}
+        highlightLength={mode === "easy"}
       />
       {/* Always rendered so the board and keyboard do not jump when it appears. */}
       <button

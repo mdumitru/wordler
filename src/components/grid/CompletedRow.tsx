@@ -15,6 +15,8 @@ type Props = {
   revealDelayMs?: number;
   // The winning guess: its tiles bounce once they have been revealed.
   isWinningRow?: boolean;
+  // Easy mode: the guess has the answer's length.
+  isLengthMatch?: boolean;
 };
 
 export const CompletedRow = ({
@@ -22,6 +24,7 @@ export const CompletedRow = ({
   solution,
   revealDelayMs,
   isWinningRow = false,
+  isLengthMatch = false,
 }: Props) => {
   const statuses = getGuessStatuses(guess, solution);
   // Freeze the delay at mount: changing animation-delay mid-flight would
@@ -32,7 +35,15 @@ export const CompletedRow = ({
   const bounceStaggerMs = getBounceStaggerMs(guess.length);
 
   return (
-    <div className="flex mb-1" role="group" aria-label={`Guess: ${guess}`}>
+    <div
+      className={`flex mb-1${
+        isLengthMatch
+          ? " rounded-lg ring-2 ring-offset-1 ring-indigo-500 dark:ring-indigo-400 dark:ring-offset-wordle-night-bg"
+          : ""
+      }`}
+      role="group"
+      aria-label={`Guess: ${guess}${isLengthMatch ? " (right length)" : ""}`}
+    >
       {guess.split("").map((letter, i) => (
         // The bounce lives on a wrapper so its transform does not replace
         // the tile's own flip animation.
