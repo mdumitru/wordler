@@ -36,7 +36,9 @@ export const CompletedRow = ({
 
   return (
     <div
-      className={`flex mb-1${
+      // w-max: hug this row's tiles instead of stretching to the widest row,
+      // so the easy-mode ring stays the guess's own size.
+      className={`flex w-max mb-1${
         isLengthMatch
           ? " rounded-lg ring-2 ring-offset-1 ring-indigo-500 dark:ring-indigo-400 dark:ring-offset-wordle-night-bg"
           : ""
