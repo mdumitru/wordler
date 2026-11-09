@@ -30,6 +30,12 @@ export const Grid = ({
   const empties = Array.from(
     Array(Math.max(0, MIN_GUESSES - guesses.length - (showCurrentRow ? 1 : 0))),
   );
+  // Once the input row reaches the sixth row or beyond, keep one dashed row
+  // after it while more guesses remain, so the board visibly grows.
+  const showGrowRow =
+    showCurrentRow &&
+    guesses.length >= MIN_GUESSES - 1 &&
+    guesses.length + 1 < maxGuesses;
   const scrollRef = useRef<HTMLDivElement>(null);
   // Only rows added since the last render play the reveal animation.
   const prevCountRef = useRef(guesses.length);
@@ -49,7 +55,11 @@ export const Grid = ({
       return;
     }
     const row = rows[Math.min(guesses.length, rows.length - 1)] as HTMLElement;
-    const rowBottom = row.offsetTop + row.offsetHeight;
+    // Bring the dashed row after the input row into view too.
+    const lastRow = (
+      showGrowRow ? (row.nextElementSibling ?? row) : row
+    ) as HTMLElement;
+    const rowBottom = lastRow.offsetTop + lastRow.offsetHeight;
     container.scrollTop = Math.max(0, rowBottom - container.clientHeight);
 
     if (!showCurrentRow || currentGuess.length === 0) {
@@ -68,7 +78,7 @@ export const Grid = ({
     } else if (cellLeft < container.scrollLeft) {
       container.scrollLeft = cellLeft;
     }
-  }, [guesses.length, currentGuess.length, showCurrentRow]);
+  }, [guesses.length, currentGuess.length, showCurrentRow, showGrowRow]);
 
   useEffect(() => {
     scrollToActive();
@@ -106,6 +116,7 @@ export const Grid = ({
             />
           ))}
           {showCurrentRow && <CurrentRow guess={currentGuess} />}
+          {showGrowRow && <EmptyRow isDashed />}
           {empties.map((_, i) => (
             <EmptyRow key={i} />
           ))}
